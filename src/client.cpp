@@ -1,4 +1,4 @@
-#include <grass.h>
+#include <grass.hpp>
 #include <netinet/in.h>
 
 /*

@@ -1,4 +1,4 @@
-#include <grass.h>
+#include <grass.hpp>
 #include <ctype.h>
 
 static struct User **userlist;

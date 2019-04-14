@@ -1,19 +1,15 @@
-SRCDIR   = src
-BINDIR   = bin
-INCLUDES = include
+CXX = g++
+CXXFLAGS = -std=c++11 -Wall -Wextra -g -fno-stack-protector -z execstack -lpthread -I include/
 
-CC=gcc
-CFLAGS=-Wall -Wextra -g -fno-stack-protector -z execstack -lpthread -std=gnu11 -I $(INCLUDES)/
-DEPS = $(wildcard $(INCLUDES)/%.h)
+all: bin/client bin/server
 
-all: $(BINDIR)/client $(BINDIR)/server $(DEPS)
+bin/client: src/client.cpp include/grass.hpp
+	$(CXX) $(CXXFLAGS) $< -o $@
 
-$(BINDIR)/client: $(SRCDIR)/client.c
-	$(CC) $(CFLAGS) $< -o $@
+bin/server: src/server.cpp include/grass.hpp
+	$(CXX) $(CXXFLAGS) $< -o $@
 
-$(BINDIR)/server: $(SRCDIR)/server.c
-	$(CC) $(CFLAGS) $< -o $@
-
-.PHONY: clean
 clean:
-	rm -f $(BINDIR)/client $(BINDIR)/server
+	rm -f bin/client bin/server
+
+.PHONY: all clean
