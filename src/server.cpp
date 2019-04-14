@@ -1,6 +1,8 @@
 #include <grass.hpp>
 #include <ctype.h>
 
+#include "grass.cpp"
+
 static struct User **userlist;
 static int numUsers;
 static struct Command **cmdlist;
