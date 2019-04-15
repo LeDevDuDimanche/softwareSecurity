@@ -1,7 +1,6 @@
 #include <grass.hpp>
 #include <ctype.h>
-
-#include "grass.cpp"
+#include <parsing.hpp>
 
 static struct User **userlist;
 static int numUsers;
@@ -11,6 +10,7 @@ char port[7] = "31337";
 
 // Helper function to run commands in unix.
 void run_command(const char* command, int sock){
+    std::vector<std::string> v = Parsing::split_string("bjorn", '/');
 }
 
 
