@@ -16,6 +16,10 @@
 #include <stdbool.h>
 #include <sys/stat.h>
 
+#define SOCKET_BUFFER_SIZE 1024
+#define PORT 31337
+
+
 struct User {
     const char* uname;
     const char* pass;
