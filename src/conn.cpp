@@ -2,10 +2,12 @@
 #include <conn.hpp>
 #include <parsing.hpp>
 
-conn::conn(std::string currentDir, std::string baseDir)
+conn::conn(std::string currentDir, std::string baseDir, UserReadTable *urt, FileDeleteTable *fd)
 {
     this->currentDir = currentDir;
     this->baseDir = baseDir;
+    this->fileDeleteTable = fd;
+    this->userReadTable = urt;
 }
 
 std::string conn::getBase() {
@@ -27,4 +29,29 @@ std::string  conn::getCurrentDir(std::string filepath) {
 
 conn::~conn()
 {
+}
+
+bool conn::isBeingRead(std::string filename) {
+    UserReadTable *urt = this->userReadTable;
+    return urt->isBeingRead(filename);
+}
+bool conn::isBeingDeleted(std::string filename) {
+    FileDeleteTable *fd = this->fileDeleteTable;
+    return fd->isBeingDeleted(filename);
+}
+void conn::addFileAsRead(std::string filename) {
+    UserReadTable *urt = this->userReadTable;
+    urt->addFile(filename, this->user);
+}
+void conn::addFileAsDeleted(std::string filename){
+    FileDeleteTable *fd = this->fileDeleteTable;
+    fd->setAsDeleted(filename);
+}
+void conn::removeFileAsRead(std::string filename) {
+    UserReadTable *urt = this->userReadTable;
+    urt->removeFile(filename, this->user);
+}
+void conn::removeFileAsDeleted(std::string filename) {
+    FileDeleteTable *fd = this->fileDeleteTable;
+    fd->removeAsDeleted(filename);
 }

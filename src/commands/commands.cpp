@@ -17,10 +17,19 @@ namespace command
     void cd(conn& conn, std::string dir) {
         std::string absoluteDir = conn.getCurrentDir(dir);
         std::string base = conn.getBase();
+        std::string oldCurrentDir = conn.currentDir;
         try {
             std::string newPath = Parsing::resolve_path(base, base + conn.currentDir , dir);
             std::string relativePath = Parsing::get_relative_path(base, newPath);
             if (pathvalidate::isDir(newPath)) {
+                bool isBeingDeleted = conn.isBeingDeleted(newPath);
+                if (isBeingDeleted) {
+                    conn.send_error(Parsing::entryDoesNotExist);
+                    return;
+                }
+                //Only update the tables if everything was successful, i.e. it is a valid directory
+                conn.removeFileAsRead(oldCurrentDir);
+                conn.addFileAsRead(relativePath);
                 conn.currentDir = relativePath;
                 conn.send_message(relativePath);
             }
@@ -50,11 +59,18 @@ namespace command
         std::string resolved;
         try {
             resolved = Parsing::resolve_path(base, currentDir, newDirName);
+            bool isBeingDeleted = conn.isBeingDeleted(resolved);
+            if (isBeingDeleted) {
+                conn.send_error(Parsing::entryDoesNotExist);
+                return;
+            }
+            conn.addFileAsRead(resolved);
             SystemCommands::mkdir(CommandConstants::mkdir, resolved);
         }
         catch(Parsing::BadPathException e) {
             conn.send_error(e.getDesc());
         }
+        conn.removeFileAsRead(resolved);
     }
     void rm(conn& conn, std::string filename) {
         std::string base = conn.getBase();
@@ -62,11 +78,19 @@ namespace command
         std::string resolved;
         try {
             resolved = Parsing::resolve_path(base, currentDir, filename);
+            bool isBeingRead = conn.isBeingRead(resolved);
+            if (isBeingRead) {
+                conn.send_error(Parsing::entryInUse);
+                return;
+            }
+            conn.addFileAsDeleted(resolved);
             SystemCommands::rm(CommandConstants::rm, resolved);
         }
         catch(Parsing::BadPathException e) {
             conn.send_error(e.getDesc());
         }
+        //The entry should have been deleted and is now removed from the synch data structure
+        conn.removeFileAsDeleted(resolved);
     }
     //File specific commands
     void get(conn& conn, std::string filename);

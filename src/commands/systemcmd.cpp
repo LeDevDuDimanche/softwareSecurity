@@ -5,8 +5,6 @@
 
 namespace SystemCommands
 {
-    
-
     std::string ls(std::string cmd, std::string dirname) {
         const char *c_cmd = (cmd + dirname).c_str();
         unsigned int buf_size = CommandConstants::buffer_size;
@@ -29,6 +27,14 @@ namespace SystemCommands
         bool exists = pathvalidate::exists(dirname);
         if (exists) {
             Parsing::BadPathException e{Parsing::entryExists};
+            throw e;
+        }
+        std::vector<std::string> split_dir = Parsing::split_string(dirname, Parsing::slash);
+        split_dir.pop_back();
+        std::string parentDir = Parsing::join_vector(split_dir, Parsing::join_path);
+        bool parentExists = pathvalidate::isDir(parentDir);
+        if (!parentExists) {
+            Parsing::BadPathException e{Parsing::entryDoesNotExist};
             throw e;
         }
         std::string command = cmd + " " + dirname;

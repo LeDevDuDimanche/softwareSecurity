@@ -31,5 +31,7 @@ namespace Parsing
     //Error messages
     const std::string badPath = "This is not a valid directory/file";
     const std::string entryExists = "There already exists an entry with that name";
+    const std::string entryDoesNotExist = "The parent directory of this directory does not exist";
+    const std::string entryInUse = "This directory or file is in use";
 } // Parsing
 #endif
