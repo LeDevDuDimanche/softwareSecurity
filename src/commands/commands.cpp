@@ -93,7 +93,9 @@ namespace command
         conn.removeFileAsDeleted(resolved);
     }
     //File specific commands
-    void get(conn& conn, std::string filename);
+    void get(conn& conn, std::string filename) {
+        
+    }
     void put(conn& conn, std::string filename, unsigned int fileSize);
     //Misc commands
     void date(conn& conn);
