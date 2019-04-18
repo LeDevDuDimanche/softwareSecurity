@@ -5,6 +5,8 @@
 
 namespace SystemCommands
 {
+
+
     std::string ls(std::string cmd, std::string dirname) {
         const char *c_cmd = (cmd + dirname).c_str();
         unsigned int buf_size = CommandConstants::buffer_size;
@@ -16,7 +18,7 @@ namespace SystemCommands
             while(fgets(buffer, sizeof buffer, pipe) != NULL) {
                 result += buffer;
             }
-        } 
+        }
         catch(...) {
             pclose(pipe);
         }
@@ -39,6 +41,10 @@ namespace SystemCommands
         }
         std::string command = cmd + " " + dirname;
         system(command.c_str());
+    }
+
+    void rm(std::string cmd, std::string dirname) {
+        // TODO
     }
 
 
