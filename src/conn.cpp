@@ -55,3 +55,7 @@ void conn::removeFileAsDeleted(std::string filename) {
     FileDeleteTable *fd = this->fileDeleteTable;
     fd->removeAsDeleted(filename);
 }
+
+std::string conn::getUser() {
+    return this->user;
+}

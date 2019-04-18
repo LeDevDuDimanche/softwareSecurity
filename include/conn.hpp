@@ -29,6 +29,7 @@ public:
     void addFileAsDeleted(std::string filename);
     void removeFileAsRead(std::string filename);
     void removeFileAsDeleted(std::string filename);
+    std::string getUser();
 };
 
 #endif

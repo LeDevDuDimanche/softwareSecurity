@@ -94,12 +94,15 @@ namespace command
     }
     //File specific commands
     void get(conn& conn, std::string filename) {
-        
+
     }
     void put(conn& conn, std::string filename, unsigned int fileSize);
     //Misc commands
     void date(conn& conn);
     void grep(conn& conn, std::string pattern);
     void w(conn& conn);
-    void whoami(conn& conn);
+    void whoami(conn& conn) {
+        //This is really stupid but I did it for consistency
+        conn.send_message(conn.getUser());
+    }
 } // command

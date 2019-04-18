@@ -22,6 +22,7 @@ namespace Parsing
 
     //To split and join a filepath
     const char slash = '/';
+    const char space = ' ';
     //A constant to represent when go to parent directory
     const std::string parent_dir = "..";
     //A constant to represent this directory
