@@ -8,7 +8,7 @@ all: bin/client bin/server
 bin/client: src/client.o src/grass.o
 	$(CXX) $(CXXFLAGS) $^ -o $@
 
-bin/server: src/server.o src/grass.o src/conn.o src/commands/pathvalidate.o src/commands/parsing.o src/commands/systemcmd.o src/commands/commands.o
+bin/server: src/server.o src/grass.o src/conn.o src/commands/pathvalidate.o src/commands/parsing.o src/commands/systemcmd.o src/commands/commands.o src/FileDeleteTable.o src/UserReadTable.o
 	$(CXX) $(CXXFLAGS) $^ -o $@
 
 

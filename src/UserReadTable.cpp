@@ -50,6 +50,7 @@ bool UserReadTable::isBeingRead(std::string filename) {
     if (!hasKey(this->FilesBeingRead, filename)) {
         return true;
     }
-    std::set  readers = this->FilesBeingRead[filename];
-    return readers.find(filename) != readers.end();
+    return false; // TODO
+    // std::set  readers = this->FilesBeingRead[filename];
+    // return readers.find(filename) != readers.end();
 }
