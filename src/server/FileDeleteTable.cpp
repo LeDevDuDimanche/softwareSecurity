@@ -1,9 +1,7 @@
-
-
 #include <mutex>
 #include <string>
 #include <map>
-#include <FileDeleteTable.hpp>
+#include <server/FileDeleteTable.hpp>
 
 FileDeleteTable::FileDeleteTable(/* args */)
 {

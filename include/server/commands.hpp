@@ -3,7 +3,9 @@
 #define COMMANDS_H
 
 #include <iostream>
-#include <conn.hpp>
+
+#include <server/conn.hpp>
+
 namespace command
 {
     //Commands that do not require authentication

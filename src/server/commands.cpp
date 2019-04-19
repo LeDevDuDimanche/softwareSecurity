@@ -1,8 +1,9 @@
-#include <commands.hpp>
-#include <pathvalidate.hpp>
-#include <systemcmd.hpp>
-#include <parsing.hpp>
 #include <iostream>
+
+#include <server/commands.hpp>
+#include <server/pathvalidate.hpp>
+#include <server/systemcmd.hpp>
+#include <server/parsing.hpp>
 
 namespace command
 {

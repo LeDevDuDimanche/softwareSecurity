@@ -1,6 +1,7 @@
 #include <iostream>
-#include <conn.hpp>
-#include <parsing.hpp>
+
+#include <server/conn.hpp>
+#include <server/parsing.hpp>
 
 conn::conn(std::string currentDir, std::string baseDir, UserReadTable *urt, FileDeleteTable *fd)
 {
@@ -16,7 +17,7 @@ std::string conn::getBase() {
 
 void conn::send_error(std::string err) {
     std::vector<std::string> v = Parsing::split_string(err, '/');
-    
+
     std::cout <<"ERROR: " << err << std::endl;
 };
 

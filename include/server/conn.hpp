@@ -3,8 +3,10 @@
 #define CONN_H
 #include <iostream>
 #include <string>
-#include <FileDeleteTable.hpp>
-#include <UserReadTable.hpp>
+
+#include <server/FileDeleteTable.hpp>
+#include <server/UserReadTable.hpp>
+
 class conn
 {
 private:
@@ -18,7 +20,7 @@ public:
     ~conn();
     std::string getBase();
     std::string getCurrentDir(std::string filepath);
-    //Send an error message to the client 
+    //Send an error message to the client
     void send_error(std::string err);
     //This sends a message to the client that is not an error.
     void send_message(std::string msg);

@@ -1,21 +1,33 @@
 CXX = g++
-CXXFLAGS = -std=c++11 -Wall -Wextra -g -fno-stack-protector -z execstack -lpthread -I include/
+CXXFLAGS = -std=c++11 -Wall -Wextra -g -fno-stack-protector -z execstack -lpthread
+INCLUDE = -I include/
 
-OBJDIR = objs
+SHARED_SRC := $(wildcard src/*.cpp)
+CLIENT_SRC := $(SHARED_SRC) $(wildcard src/client/*.cpp)
+SERVER_SRC := $(SHARED_SRC) $(wildcard src/server/*.cpp)
+
+CLIENT_OBJ := $(CLIENT_SRC:src/%.cpp=obj/%.o)
+SERVER_OBJ := $(SERVER_SRC:src/%.cpp=obj/%.o)
+
+
+.PHONY: all clean
 
 all: bin/client bin/server
 
-bin/client: src/client.o src/grass.o
-	$(CXX) $(CXXFLAGS) $^ -o $@
+bin/client: $(CLIENT_OBJ)
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) $^ -o $@
+	@echo "Compiled $@ successfully!"
 
-bin/server: src/server.o src/grass.o src/conn.o src/commands/pathvalidate.o src/commands/parsing.o src/commands/systemcmd.o src/commands/commands.o src/FileDeleteTable.o src/UserReadTable.o
-	$(CXX) $(CXXFLAGS) $^ -o $@
+bin/server: $(SERVER_OBJ)
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) $^ -o $@
+	@echo "Compiled $@ successfully!"
 
-
-%.o: %.cpp
-	$(CXX) -c $(CXXFLAGS) $< -o $@
+obj/%.o: src/%.cpp
+	@mkdir -p $(@D)
+	$(CXX) -c $(CXXFLAGS) $(INCLUDE) $< -o $@
 
 clean:
-	rm -f src/*.o bin/client bin/server bin/test src/commands/*.o
-
-.PHONY: all clean
+	rm -f bin/client bin/server bin/test obj/*.o obj/*/*.o
+	rm -f src/*.o src/*/*.o    # TODO: We can remove this line later

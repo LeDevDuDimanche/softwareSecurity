@@ -1,6 +1,6 @@
-#include <systemcmd.hpp>
-#include <pathvalidate.hpp>
-#include <parsing.hpp>
+#include <server/systemcmd.hpp>
+#include <server/pathvalidate.hpp>
+#include <server/parsing.hpp>
 
 
 namespace SystemCommands

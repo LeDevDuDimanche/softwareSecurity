@@ -1,7 +1,8 @@
 #include <mutex>
 #include <iostream>
-#include <parsing.hpp>
-#include <UserReadTable.hpp>
+
+#include <server/parsing.hpp>
+#include <server/UserReadTable.hpp>
 
 bool hasKey(std::map<std::string,std::set<std::string>> m, std::string key) {
     if (m.find(key) != m.end()) {
