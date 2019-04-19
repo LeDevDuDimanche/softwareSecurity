@@ -1,36 +1,43 @@
 CXX = g++
-CXXFLAGS = -std=c++11 -Wall -Wextra -g -fno-stack-protector -z execstack -lpthread
-INCLUDE = -I include/
+CXXFLAGS = -std=c++11 -Wall -Wextra -g -fno-stack-protector -z execstack -pthread
 
+include_flag = -I include/
 
-SERVER_FLAGS := -pthread
+names = client server
+binaries := $(names:%=bin/%)
 
-SHARED_SRC := $(wildcard src/*.cpp)
-CLIENT_SRC := $(SHARED_SRC) $(wildcard src/client/*.cpp)
-SERVER_SRC := $(SHARED_SRC) $(wildcard src/server/*.cpp)
+shared_src := $(wildcard src/*.cpp)
+client_only_src := $(wildcard src/client/*.cpp)
+server_only_src := $(wildcard src/server/*.cpp)
+client_src := $(shared_src) $(client_only_src)
+server_src := $(shared_src) $(server_only_src)
+all_src := $(shared_src) $(client_only_src) $(server_only_src)
 
-CLIENT_OBJ := $(CLIENT_SRC:src/%.cpp=obj/%.o)
-SERVER_OBJ := $(SERVER_SRC:src/%.cpp=obj/%.o)
+client_obj := $(client_src:src/%.cpp=obj/%.o)
+server_obj := $(server_src:src/%.cpp=obj/%.o)
+all_dep := $(all_src:src/%.cpp=obj/%.d)
+
+remove := $(binaries) obj/*.[do] $(names:%=obj/%/*.[do])
 
 
 .PHONY: all clean
 
-all: bin/client bin/server
+all: $(binaries)
 
-bin/client: $(CLIENT_OBJ)
+bin/client: $(client_obj)
+bin/server: $(server_obj)
+bin/%:
 	@mkdir -p $(@D)
-	$(CXX) $(CXXFLAGS) $(INCLUDE) $^ -o $@
-	@echo "Compiled $@ successfully!"
-
-bin/server: $(SERVER_OBJ)
-	@mkdir -p $(@D)
-	$(CXX) $(SERVER_FLAGS) $(CXXFLAGS) $(INCLUDE) $^ -o $@
-	@echo "Compiled $@ successfully!"
+	$(CXX) $(CXXFLAGS) $(include_flag) -o $@ $^
+	@echo "Built $@ successfully!"
 
 obj/%.o: src/%.cpp
 	@mkdir -p $(@D)
-	$(CXX) -c $(CXXFLAGS) $(INCLUDE) $< -o $@
+	$(CXX) $(CXXFLAGS) -MMD -MP $(include_flag) -c -o $@ $<
 
 clean:
-	rm -f bin/client bin/server bin/test obj/*.o obj/*/*.o
-	rm -f src/*.o src/*/*.o    # TODO: We can remove this line later
+	rm -f $(remove)
+	rm -f bin/test src/*.o src/*/*.o    # TODO: We can remove this line later
+
+
+-include $(all_dep)

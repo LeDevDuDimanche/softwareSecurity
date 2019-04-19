@@ -1,8 +1,6 @@
-# Binaries
+# Files generated during compilation
 /bin/
-
-# Object files
-*.o
+/obj/
 
 # IDE configuration
 .vscode/
