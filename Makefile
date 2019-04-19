@@ -2,6 +2,9 @@ CXX = g++
 CXXFLAGS = -std=c++11 -Wall -Wextra -g -fno-stack-protector -z execstack -lpthread
 INCLUDE = -I include/
 
+
+SERVER_FLAGS := -pthread
+
 SHARED_SRC := $(wildcard src/*.cpp)
 CLIENT_SRC := $(SHARED_SRC) $(wildcard src/client/*.cpp)
 SERVER_SRC := $(SHARED_SRC) $(wildcard src/server/*.cpp)
@@ -21,7 +24,7 @@ bin/client: $(CLIENT_OBJ)
 
 bin/server: $(SERVER_OBJ)
 	@mkdir -p $(@D)
-	$(CXX) $(CXXFLAGS) $(INCLUDE) $^ -o $@
+	$(CXX) $(SERVER_FLAGS) $(CXXFLAGS) $(INCLUDE) $^ -o $@
 	@echo "Compiled $@ successfully!"
 
 obj/%.o: src/%.cpp
