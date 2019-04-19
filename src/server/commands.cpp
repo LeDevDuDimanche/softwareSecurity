@@ -4,9 +4,48 @@
 #include <server/pathvalidate.hpp>
 #include <server/systemcmd.hpp>
 #include <server/parsing.hpp>
+#include <server/commandParsing.hpp>
 
 namespace command
 {
+
+    //This is just a function that runs a command from a given string
+    void run_command(conn& conn, std::string commandLine) {
+        try {
+            std::vector<std::string> splitBySpace = Parsing::split_string(commandLine, Parsing::space);
+            if (splitBySpace.empty()) {
+                conn.send_error("Could not parse the command");
+                return;
+            }
+            std::string commandName = splitBySpace[0];
+            bool hasRightArguments = Parsing::hasRightNumberOfArguments(splitBySpace);
+            if (!hasRightArguments) {
+                conn.send_error("Not the right argument total");
+                return;
+            }
+            if (commandName == "cd") {
+                cd(conn, splitBySpace[1]);
+                return;
+            }
+            if (commandName == "ls") {
+                ls(conn);
+                return;
+            }
+            if (commandName == "mkdir") {
+                mkdir(conn, splitBySpace[1]);
+                return;
+            }
+            if (commandName == "get") {
+                get(conn, splitBySpace[1]);
+            }
+        }
+        catch(Parsing::CommandArgumentsException e) {
+            conn.send_error(e.getDesc());
+        }
+        catch(Parsing::CommandNotFoundException e) {
+            conn.send_error(e.getDesc());
+        }
+    }
     //Commands that do not require authentication
     void ping(conn& conn);
     void exit(conn& conn);
