@@ -1,7 +1,6 @@
 #include <grass.hpp>
 #include <ctype.h>
-
-#include "grass.cpp"
+#include <parsing.hpp>
 
 #define IP_PROT 0
 #define SOCKET_QUEUE_LENGTH 3
@@ -20,6 +19,7 @@ static int numCmds;
 
 // Helper function to run commands in unix.
 void run_command(const char* command, int sock){
+    std::vector<std::string> v = Parsing::split_string("bjorn", '/');
 }
 
 

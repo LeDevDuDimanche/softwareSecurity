@@ -1,0 +1,20 @@
+The commands API works in the following. Every function takes in a reference to a connection object, does some parsing or system commands 
+and then send either an output or an error depending on what happened. A connection object is thought of as an object that describes the state of a connection
+at a given point. The connection object describes the state of a connections, for example who is the user corresponding to this connection 
+and in what directory is the user at a given point in time. To summarize, the connection object is passed as a reference to the commands
+API and then it modifies the state of the connection. 
+
+Connection object:
+    The connection object has a few instance variables.
+    The user variable is very straightforward and corresponds to the user associated with the connection. 
+    The baseDir variable corresponds to the base directory where all users(or in theory a group of users) host their shared files and directories.
+    The currentDir variable corresponds to the directory, relative to the base directory, the user is located at currently.
+    The UsereReadTable is a pointer to an instance of a UserReadTable object. It is important that all the users have a pointer to the same instance of the object since this is used to synchronize their activities.
+    The FileDeleteTable is a pointer to an instance of a FileDeleteTable object. It is important that all connections have a pointer that points to the same instance since this is used to synchronize the active connections.
+
+FileDeleteTable:
+    Used to synchronize different connections. Deleting a file or directory may take a while and such a user could be able to enter the directory
+    while it is being removed. To avoid this, this is used so when starting to delete a  file/directory, it is logged here and the consequently removed the rm command finished
+UserReadTable:
+    Used to synchronize different connections. This is used when a user enters a directory, the directory and all of its parent directories are all marked as being read 
+    so that different users can not delete a file/directory while it is being accessed.

@@ -1,2 +1,8 @@
 # Binaries
 /bin/
+
+# Object files
+*.o
+
+# IDE configuration
+.vscode/
