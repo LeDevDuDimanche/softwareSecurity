@@ -1,6 +1,8 @@
 #include <grass.hpp>
 #include <ctype.h>
 #include <server/parsing.hpp>
+#include <pthread.h>
+#include <vector>
 
 #define IP_PROT 0
 #define SOCKET_QUEUE_LENGTH 3
@@ -16,6 +18,7 @@ static struct User **userlist;
 static int numUsers;
 static struct Command **cmdlist;
 static int numCmds;
+static std::vector<pthread_t> client_handlers = {};
 
 // Helper function to run commands in unix.
 void run_command(const char* command, int sock){
@@ -44,6 +47,25 @@ void recv_file(int fp, int sock, int size) {
 
 // Server side REPL given a socket file descriptor
 void *connection_handler(void* sockfd) {
+    long socket_id = (long)sockfd; //conversion from int to long because of -fnopermissive compilation flag
+    pthread_t this_thread = pthread_self();
+    printf("new thread id %ld, new socket_id %ld", this_thread, socket_id);
+
+    //TODO do a mutex acquisition operation before touching client_handlers
+    bool found = false;
+    for (auto it = client_handlers.begin(); it != client_handlers.end(); )
+    {
+        if (*it == this_thread) {
+            found = true;
+            client_handlers.erase(it);
+            break;
+        } else {
+            ++it;
+        }
+    } 
+    printf("found thread before exiting: %d", found);
+    pthread_exit(NULL/*a return value available to the thread doing join on this thread*/);
+
 }
 
 /*
@@ -104,15 +126,39 @@ int main() {
         server_failure("listen");
     }
 
+    int ret_create = -1;
+    pthread_t new_thread;
 
     forever
     {
         printf("waiting for a connection\n");
+
+        //a blocking call
         if ((new_socket = accept(server_fd, (struct sockaddr *)&address,
                            (socklen_t*)&addrlen)) < 0)
         {
             server_failure("accept");
         }
+        printf("handling new connection");
+
+        if ((ret_create = pthread_create(&new_thread, NULL /*default attributes*/,
+             connection_handler, (void *) new_socket))) 
+        {
+
+            #define FIRST_PART_ERROR_MSG "unable to create thread, thread creation error number: "
+            size_t err_msg_max_len = (sizeof FIRST_PART_ERROR_MSG) + 30;
+            char *err_msg_buffer = (char *)malloc(err_msg_max_len);
+            if (err_msg_buffer == NULL) 
+            {
+                server_failure("cannot allocate memory and cannot create a thread");
+            }
+
+            snprintf(err_msg_buffer, err_msg_max_len, FIRST_PART_ERROR_MSG " %d", ret_create);
+            server_failure(err_msg_buffer);
+        }
+
+        //TODO add a mutex acquisition operation before doing an operation on client_handlers
+        client_handlers.push_back(new_thread);
 
         valread = read(new_socket, buffer, SOCKET_BUFFER_SIZE);
         snprintf(buffer, SOCKET_BUFFER_SIZE, "%s\n");
