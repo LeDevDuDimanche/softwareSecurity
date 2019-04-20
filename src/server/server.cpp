@@ -3,6 +3,7 @@
 #include <server/parsing.hpp>
 #include <pthread.h>
 #include <vector>
+#include <mutex>
 
 #define IP_PROT 0
 #define SOCKET_QUEUE_LENGTH 3
@@ -18,6 +19,7 @@ static struct User **userlist;
 static int numUsers;
 static struct Command **cmdlist;
 static int numCmds;
+static std::mutex client_handlers_mutex;
 static std::vector<pthread_t> client_handlers = {};
 
 // Helper function to run commands in unix.
@@ -49,10 +51,10 @@ void recv_file(int fp, int sock, int size) {
 void *connection_handler(void* sockfd) {
     long socket_id = (long)sockfd; //conversion from int to long because of -fnopermissive compilation flag
     pthread_t this_thread = pthread_self();
-    printf("new thread id %ld, new socket_id %ld", this_thread, socket_id);
-
-    //TODO do a mutex acquisition operation before touching client_handlers
+    printf("new thread id %ld, new socket_id %ld\n", this_thread, socket_id);
+ 
     bool found = false;
+    client_handlers_mutex.lock();
     for (auto it = client_handlers.begin(); it != client_handlers.end(); )
     {
         if (*it == this_thread) {
@@ -63,7 +65,8 @@ void *connection_handler(void* sockfd) {
             ++it;
         }
     } 
-    printf("found thread before exiting: %d", found);
+    client_handlers_mutex.unlock();
+    printf("found thread before exiting: %d\n", found);
     pthread_exit(NULL/*a return value available to the thread doing join on this thread*/);
 
 }
@@ -156,9 +159,10 @@ int main() {
             snprintf(err_msg_buffer, err_msg_max_len, FIRST_PART_ERROR_MSG " %d", ret_create);
             server_failure(err_msg_buffer);
         }
-
-        //TODO add a mutex acquisition operation before doing an operation on client_handlers
+ 
+        client_handlers_mutex.lock();
         client_handlers.push_back(new_thread);
+        client_handlers_mutex.unlock();
 
         valread = read(new_socket, buffer, SOCKET_BUFFER_SIZE);
         snprintf(buffer, SOCKET_BUFFER_SIZE, "%s\n");
