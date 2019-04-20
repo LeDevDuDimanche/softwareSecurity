@@ -52,6 +52,6 @@ bool UserReadTable::isBeingRead(std::string filename) {
         return true;
     }
     return false; // TODO
-    // std::set  readers = this->FilesBeingRead[filename];
-    // return readers.find(filename) != readers.end();
+    std::set<std::string>  readers = this->FilesBeingRead[filename];
+    return readers.find(filename) != readers.end();
 }
