@@ -25,8 +25,8 @@ void UserReadTable::addFile(std::string filename, std::string user) {
             std::set<std::string> s;
             this->FilesBeingRead[current_path] = s;
         }
-        std::set<std::string> readers = this->FilesBeingRead[current_path];
-        readers.insert(user);
+        //std::set<std::string> readers = this->FilesBeingRead[current_path];
+        this->FilesBeingRead[current_path].insert(user);
         split_filename.pop_back();
     }
     this->mtx.unlock();
@@ -41,8 +41,8 @@ void UserReadTable::removeFile(std::string filename, std::string user) {
             //Something is wack
             continue;
         }
-        std::set<std::string> readers = this->FilesBeingRead[current_path];
-        readers.erase(user);
+        //std::set<std::string> readers = this->FilesBeingRead[current_path];
+        this->FilesBeingRead[current_path].erase(user);
         split_filename.pop_back();
     }
     this->mtx.unlock();
