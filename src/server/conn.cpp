@@ -2,6 +2,13 @@
 
 #include <server/conn.hpp>
 #include <server/parsing.hpp>
+#include <server/conf.hpp>
+
+//Calculates the location of the conf file 
+std::string getConfFilepath() {
+    //Will update later with something that should be less hard code-y
+    return "./grass.conf";
+}
 
 conn::conn(std::string currentDir, std::string baseDir, UserReadTable *urt, FileDeleteTable *fd)
 {
@@ -9,17 +16,16 @@ conn::conn(std::string currentDir, std::string baseDir, UserReadTable *urt, File
     this->baseDir = baseDir;
     this->fileDeleteTable = fd;
     this->userReadTable = urt;
+    this->loginStatus = -1;
 }
 
 std::string conn::getBase() {
     return this->baseDir;
-};
+}
 
 void conn::send_error(std::string err) {
-    std::vector<std::string> v = Parsing::split_string(err, '/');
-
     std::cout <<"ERROR: " << err << std::endl;
-};
+}
 
 void conn::send_message(std::string msg) {
     std::cout << msg << std::endl;
@@ -59,4 +65,42 @@ void conn::removeFileAsDeleted(std::string filename) {
 
 std::string conn::getUser() {
     return this->user;
+}
+
+bool conn::isBeingAuthenticated() {
+    return this->loginStatus == 0;
+}
+
+bool conn::isLoggedIn() {
+    return this->loginStatus == 1;
+}
+
+void conn::setLoginStatus(int status) {
+    this->loginStatus = status; 
+}
+
+void conn::setUser(std::string user) { 
+        this->user = user;
+}
+
+void conn::clearRead() {
+    UserReadTable *urt = this->userReadTable;
+    urt->removeFile(this->currentDir, this->user);
+}
+
+void conn::clearLogin() {
+    this->user = "";
+    this->setLoginStatus(AuthenticationMessages::notLoggedIn);
+    //Clear the login table
+}
+
+void conn::setLogin() {
+    //updates the shared login table after a successful authentication
+    ActiveUserTable *p = this->activeUserTable;
+    p->AddUser(this->user);
+}
+
+std::string conn::getAllLoggedInUsers() {
+    ActiveUserTable *p = this->activeUserTable;
+    return p->getAllLoggedInUsers();
 }

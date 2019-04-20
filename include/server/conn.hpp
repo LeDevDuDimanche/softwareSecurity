@@ -6,6 +6,9 @@
 
 #include <server/FileDeleteTable.hpp>
 #include <server/UserReadTable.hpp>
+#include <server/ActiveUserTable.hpp> 
+
+std::string getConfFilepath();
 
 class conn
 {
@@ -13,7 +16,9 @@ private:
     std::string baseDir;
     FileDeleteTable *fileDeleteTable;
     UserReadTable *userReadTable;
+    ActiveUserTable *activeUserTable;
     std::string user;
+    int loginStatus;
 public:
     std::string currentDir;
     conn(std::string CurrentDir, std::string baseDir, UserReadTable *urt, FileDeleteTable *fd);
@@ -32,6 +37,16 @@ public:
     void removeFileAsRead(std::string filename);
     void removeFileAsDeleted(std::string filename);
     std::string getUser();
+    bool isLoggedIn();
+    //Status must be a part of {-1, 0, 1}
+    void setLoginStatus(int status);
+    bool isBeingAuthenticated();
+    void setUser(std::string user);
+    void clearRead();
+    void clearLogin();
+    //setLogin updates the shared login table with the username
+    void setLogin();
+    std::string getAllLoggedInUsers();
 };
 
 #endif

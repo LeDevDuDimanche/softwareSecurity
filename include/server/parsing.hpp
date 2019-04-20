@@ -28,6 +28,7 @@ namespace Parsing
     //A constant to represent this directory
     const std::string this_dir = ".";
     const std::string join_path = "/";
+    const std::string new_line = "\n";
 
     //Error messages
     const std::string badPath = "This is not a valid directory/file";

@@ -4,47 +4,23 @@
 #include <fstream>
 #include <string>
 #include <sstream>
-#include <parsing.hpp>
+#include <server/parsing.hpp>
 
-std::vector<std::string> getLinesThatStartWithKeyWord(std::string keyword, std::string filename) {
-    std::ifstream infile;
-    infile.open(filename);
-    std::string line;
-    std::vector<std::string> lines;
-    while(std::getline(infile, line)) {
-        std::vector<std::string> split_line = Parsing::split_string(line, Parsing::space);
-        if (split_line.empty()) {
-            continue;
-        }
-        std::string first = split_line[0];
-        if (first == keyword) {
-            lines.push_back(line);
-        }
-    }
-    return lines;
-}
+namespace AuthenticationMessages
+{
+    const std::string userDoesNotExist = "This username is not registered";
+    const std::string incorrectCommandSequence = "Pass can only be issued right after a successful login command";
+    const int authenticatingStatus = 0;
+    const int notLoggedIn = -1;
+    const int loggedIn = 1;
+    const std::string incorrectPassword = "Incorrect password";
+    const std::string logutMessage = "Successful logout";
+    const std::string mustBeLoggedIn = "A user must be logged in to issue this command";
+} // AuthenticationMessages
 
-bool checkIfUserExists(std::string username, std::string filename) {
-    std::vector<std::string> users = getLinesThatStartWithKeyWord("user", filename);
-    for(std::string line: users) {
-        std::vector<std::string> userData = Parsing::split_string(line, Parsing::space);
-        std::string un = userData[1];
-        if (un == username) {
-            return true;
-        }
-    }
-    return false;
-}
+std::vector<std::string> getLinesThatStartWithKeyWord(std::string keyword, std::string filename);
 
-bool checkIfUserPasswordExists(std::string username, std::string pw, std::string filename) {
-    std::vector<std::string> users = getLinesThatStartWithKeyWord("user", filename);
-    for(std::string line: users) {
-        std::vector<std::string> userData = Parsing::split_string(line, Parsing::space);
-        std::string un = userData[1];
-        if (un == username) {
-            return pw == userData[2];
-        }
-    }
-    return false;
-}
+bool checkIfUserExists(std::string username, std::string filename);
+
+bool checkIfUserPasswordExists(std::string username, std::string pw, std::string filename);
 #endif
