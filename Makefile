@@ -33,7 +33,7 @@ bin/%:
 
 obj/%.o: src/%.cpp
 	@mkdir -p $(@D)
-	$(CXX) $(CXXFLAGS) -MMD -MP $(include_flag) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) $(include_flag) -MMD -MP -c -o $@ $<
 
 clean:
 	rm -f $(remove)

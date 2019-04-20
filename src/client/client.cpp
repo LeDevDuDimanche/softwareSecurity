@@ -1,5 +1,19 @@
 #include <grass.hpp>
+
+#include <fstream>
+#include <iostream>
+#include <string>
+
+#include <cstdlib>
+#include <cstring>
+
 #include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <unistd.h>
+
+#include <sockets.hpp>
+
 
 /*
  * Send a file to the server as its own thread
@@ -9,6 +23,7 @@
  */
 void send_file(int fp, int d_port) {
     // TODO
+    fp += d_port; // just to get rid of warnings
 }
 
 /*
@@ -20,61 +35,89 @@ void send_file(int fp, int d_port) {
  */
 void recv_file(int fp, int d_port, int size) {
     // TODO
+    fp += d_port * size; // just to get rid of warnings
 }
 
-
-/*
- * search all files in the current directory
- * and its subdirectory for the pattern
- *
- * pattern: an extended regular expressions.
- */
-void search(char *pattern) {
-    // TODO
+void print_usage(int argc, const char* argv[]) {
+    std::string program_name = "client";
+    if (argc > 0 && argv[0][0] != '\0') {
+        program_name = argv[0];
+    }
+    std::cerr << "Usage: " << program_name << " server_ip server_port "
+                 "[in_file out_file]\n";
 }
 
-int main(int argc, char const *argv[])
-{
-    // TODO:
-    // Make a short REPL to send commands to the server
-    // Make sure to also handle the special cases of a get and put command
-    //
-    // get input from command line like this: ./client server-ip server-port infile outfile
-    // remove hardcoded server ip
-    //remove hardcoded port
-
-    struct sockaddr_in address;
-    int sock = 0, valread;
-    struct sockaddr_in serv_addr;
-    char *hello = "Hello from client";
-    char buffer[SOCKET_BUFFER_SIZE] = {0};
-    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-    {
-        printf("\n Socket creation error \n");
-        return -1;
+int main(int argc, const char* argv[]) {
+    if (argc != 3 && argc != 5) {
+        print_usage(argc, argv);
+        return EXIT_FAILURE;
     }
 
-    memset(&serv_addr, '0', sizeof(serv_addr));
+    struct sockaddr_in server_addr = {};
+    server_addr.sin_family = AF_INET;
 
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(PORT);
-
-    // Convert IPv4 and IPv6 addresses from text to binary form
-    //TODO remove inet_aton and code that yourself
-    if(inet_aton("127.0.0.1", &(serv_addr.sin_addr)) == 0)
-    {
-        printf("\nInvalid address/ Address not supported \n");
-        return -1;
+    // TODO: Is inet_aton() preinstalled on Kali Linux?
+    if(inet_aton(argv[1], &(server_addr.sin_addr)) == 0) {
+        std::cerr << "Invalid address " << '"' << argv[1] << '"' << "\n";
+        return EXIT_FAILURE;
     }
 
-    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
-    {
-        printf("\nConnection Failed \n");
-        return -1;
+    char* end;
+    long port = std::strtol(argv[2], &end, 10);
+    if (errno != 0 || *end != '\0' || port <= 0 || port >= 0x10000) {
+        std::cerr << "Invalid port " << '"' << argv[2] << '"' << "\n";
+        return EXIT_FAILURE;
     }
-    send(sock , hello , strlen(hello) , 0 );
-    printf("Hello message sent\n");
-    valread = read( sock , buffer, SOCKET_BUFFER_SIZE);
-    printf("%s\n",buffer );
-    return 0;
+    server_addr.sin_port = htons(port);
+
+    int sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (sock == -1) {
+        std::cerr << "Socket creation error\n";
+        return EXIT_FAILURE;
+    }
+
+    struct sockaddr* connect_addr = (struct sockaddr*) &server_addr;
+    if (connect(sock, connect_addr, sizeof *connect_addr) != 0) {
+        std::cerr << "Couldn't connect to server\n";
+        return EXIT_FAILURE;
+    }
+
+    std::istream* in;
+    std::ostream* out;
+    if (argc == 5) {
+        std::ifstream in_file(argv[3]);
+        if (!in_file) {
+            std::cerr << "Couldn't open in_file\n";
+            return EXIT_FAILURE;
+        }
+        in = &in_file;
+
+        std::ofstream out_file(argv[4]);
+        if (!out_file) {
+            std::cerr << "Couldn't open out_file\n";
+            return EXIT_FAILURE;
+        }
+        out = &out_file;
+    } else {
+        in = &std::cin;
+        out = &std::cout;
+    }
+
+    //char buffer[SOCKET_BUFFER_SIZE] = {0};
+    //valread = read( sock , buffer, SOCKET_BUFFER_SIZE);
+
+    std::string command;
+    while (std::getline(*in, command)) {
+        if (!sockets::send(command + '\n', sock)) {
+            std::cerr << "Couldn't send command to server\n";
+            return EXIT_FAILURE;
+        }
+        // TODO: get_reply();
+        *out << "answer " << command << "\n";
+        // TODO:
+        // Make sure to also handle the special cases of a get and put command
+    }
+
+    // TODO: did we break successfully or was it a failure?
+    return EXIT_SUCCESS;
 }

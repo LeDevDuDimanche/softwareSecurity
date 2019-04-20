@@ -4,6 +4,8 @@
 #include <pthread.h>
 #include <vector>
 #include <mutex>
+#include <netinet/in.h>
+#include <unistd.h>
 
 #define IP_PROT 0
 #define SOCKET_QUEUE_LENGTH 3
@@ -91,7 +93,7 @@ void parse_grass() {
 // Listen to the port and handle each connection
 int main() {
     int server_fd, new_socket, valread;
-    //specifies a transport address and port for the Ipv4    
+    //specifies a transport address and port for the Ipv4
     struct sockaddr_in address;
 
     int addrlen = sizeof(address);
@@ -107,7 +109,7 @@ int main() {
         server_failure("socket creation failed");
     }
 
-    //setting use of the TCP. Also we are attaching socket to port PORT 
+    //setting use of the TCP. Also we are attaching socket to port PORT
     if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)))
     {
         server_failure("setsockopt");
@@ -145,13 +147,13 @@ int main() {
         printf("handling new connection");
 
         if ((ret_create = pthread_create(&new_thread, NULL /*default attributes*/,
-             connection_handler, (void *) new_socket))) 
+             connection_handler, (void *) new_socket)))
         {
 
             #define FIRST_PART_ERROR_MSG "unable to create thread, thread creation error number: "
             size_t err_msg_max_len = (sizeof FIRST_PART_ERROR_MSG) + 30;
             char *err_msg_buffer = (char *)malloc(err_msg_max_len);
-            if (err_msg_buffer == NULL) 
+            if (err_msg_buffer == NULL)
             {
                 server_failure("cannot allocate memory and cannot create a thread");
             }
