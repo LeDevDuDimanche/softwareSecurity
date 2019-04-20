@@ -1,20 +1,16 @@
-#ifndef GRASS_H
-#define GRASS_H
+#ifndef GRASS_HPP
+#define GRASS_HPP
 
 #define DEBUG true
 
-#include <string.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <pthread.h>
-#include <stdbool.h>
-#include <sys/stat.h>
+// The following headers were included in the template, it should be safe to
+// uncomment them if needed.
+// #include <sys/stat.h>
+// #include <sys/types.h>
+// #include <netdb.h>
+// #include <fcntl.h>
+// #include <stdbool.h>
+
 
 #define SOCKET_BUFFER_SIZE 1024
 #define PORT 31337
