@@ -19,7 +19,7 @@ namespace command
             }
             std::string commandName = splitBySpace[0];
             bool hasRightArguments = Parsing::hasRightNumberOfArguments(splitBySpace);
-            if (!hasRightArguments) {
+            if (!hasRightArguments) {(
                 conn.send_error("Not the right argument total");
                 return;
             }
@@ -37,6 +37,36 @@ namespace command
             }
             if (commandName == "get") {
                 get(conn, splitBySpace[1]);
+            }
+            if (commandName == "put") {
+
+            }
+            if (commandName == "w") {
+                w(conn);
+            }
+            if (commandName == "whoami") {
+                whoami(conn);
+            }
+            if (commandName == "date") {
+                ping(conn);
+            }
+            if (commandName == "ping") {
+                ping(conn);
+            } 
+            if (commandName == "login") {
+                login(conn, splitBySpace[1]);
+            }
+            if (commandName == "pass") {
+                pass(conn, splitBySpace[1]);
+            }
+            if (commandName == "exit") {
+                exit(conn);
+            }
+            if (commandName == "logout") {
+                logout(conn);
+            }
+            if (commandName == "grep") {
+                grep(conn, splitBySpace[1]);
             }
         }
         catch(Parsing::CommandArgumentsException e) {
