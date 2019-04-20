@@ -11,10 +11,12 @@
 // #include <fcntl.h>
 // #include <stdbool.h>
 
-
-#define SOCKET_BUFFER_SIZE 1024
-#define PORT 31337
-
+#include <stdlib.h>
+#include <stdio.h>
+#define SOCKET_BUFFER_SIZE 1024 
+#define server_failure(msg) \
+    perror(msg); \
+    exit(EXIT_FAILURE);
 
 struct User {
     const char* uname;

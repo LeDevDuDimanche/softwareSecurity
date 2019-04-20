@@ -2,6 +2,7 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <grass.hpp>
 #include <server/parsing.hpp>
 
 
@@ -33,6 +34,17 @@ bool checkIfUserExists(std::string username, std::string filename) {
         }
     }
     return false;
+}
+ 
+long getConfPort(std::string filename) {
+    std::vector<std::string> ports = getLinesThatStartWithKeyWord("port", filename);
+    if (ports.size() != 1) {
+        server_failure("wrong number of ports specification in configuration file");
+    }
+    std::string port_line = ports.front();
+    std::vector<std::string> port_info = Parsing::split_string(port_line, Parsing::space);
+    return std::stol(port_info[1]);
+
 }
 
 bool checkIfUserPasswordExists(std::string username, std::string pw, std::string filename) {

@@ -1,18 +1,17 @@
 #include <grass.hpp>
 #include <ctype.h>
 #include <server/parsing.hpp>
+#include <server/conf.hpp>
 #include <pthread.h>
 #include <vector>
 #include <mutex>
 #include <netinet/in.h>
+#include <server/commands.hpp>
 #include <unistd.h>
 
 #define IP_PROT 0
 #define SOCKET_QUEUE_LENGTH 3
 #define forever for(;;)
-#define server_failure(msg) \
-    perror(msg); \
-    exit(EXIT_FAILURE);
 #define HELLO_WORLD "hello world"
 
 
@@ -83,10 +82,10 @@ void *connection_handler(void* sockfd) {
 void search(char *pattern) {
     // TODO
 }
+ 
+    
 
-// Parse the grass.conf file and fill in the global variables
-void parse_grass() {
-}
+
 
 // TODO:
 // Parse the rass.conf file
@@ -117,8 +116,12 @@ int main() {
 
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
+
+    std::string conf_path = getConfFilepath();
     //change byte order according to make it match the big endian TCP/IP network byte order.
-    long server_port = PORT;
+
+   
+    long server_port = getConfPort(conf_path);  
     address.sin_port = htons( server_port );
 
    if (bind(server_fd, (struct sockaddr *)&address,

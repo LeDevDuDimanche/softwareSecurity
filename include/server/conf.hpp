@@ -22,5 +22,7 @@ std::vector<std::string> getLinesThatStartWithKeyWord(std::string keyword, std::
 
 bool checkIfUserExists(std::string username, std::string filename);
 
+long getConfPort(std::string filename);
+
 bool checkIfUserPasswordExists(std::string username, std::string pw, std::string filename);
 #endif

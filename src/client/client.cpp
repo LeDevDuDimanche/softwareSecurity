@@ -56,7 +56,6 @@ int main(int argc, const char* argv[]) {
     struct sockaddr_in server_addr = {};
     server_addr.sin_family = AF_INET;
 
-    // TODO: Is inet_aton() preinstalled on Kali Linux?
     if(inet_aton(argv[1], &(server_addr.sin_addr)) == 0) {
         std::cerr << "Invalid address " << '"' << argv[1] << '"' << "\n";
         return EXIT_FAILURE;
