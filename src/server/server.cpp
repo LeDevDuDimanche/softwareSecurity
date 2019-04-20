@@ -7,6 +7,7 @@
 #include <mutex>
 #include <netinet/in.h>
 #include <server/commands.hpp>
+#include <server/commandParsing.hpp>
 #include <unistd.h>
 
 #define IP_PROT 0
@@ -50,6 +51,8 @@ void recv_file(int fp, int sock, int size) {
 
 // Server side REPL given a socket file descriptor
 void *connection_handler(void* sockfd) {
+    char buffer[SOCKET_BUFFER_SIZE] = {0}; 
+    int valread;
     long socket_id = (long)sockfd; //conversion from int to long because of -fnopermissive compilation flag
     pthread_t this_thread = pthread_self();
     printf("new thread id %ld, new socket_id %ld\n", this_thread, socket_id);
@@ -68,6 +71,62 @@ void *connection_handler(void* sockfd) {
     } 
     client_handlers_mutex.unlock();
     printf("found thread before exiting: %d\n", found);
+
+    std::string to_process = "";
+    std::vector<std::string> processed_lines;
+    std::string read_str;
+    int buffer_idx, end_last_copy;
+    while ((valread = read(socket_id, buffer, SOCKET_BUFFER_SIZE)) > 0 && valread < SOCKET_BUFFER_SIZE)
+    {
+        read_str = std::string(buffer, valread);
+        buffer_idx = 0;
+        end_last_copy = -1;
+        processed_lines = {}; 
+
+        #define push_inside_to_process \
+            if (buffer_idx > end_last_copy + 1) { \
+                to_process.append(read_str.substr(end_last_copy + 1, buffer_idx)); \
+            } 
+
+        for (char cur_chr: read_str) {
+            if (cur_chr == '\n') { 
+                push_inside_to_process
+                end_last_copy = buffer_idx;
+                if (to_process.size() > 0) {  
+                    processed_lines.push_back(to_process); 
+                }
+
+                to_process = ""; 
+            }
+            buffer_idx++;
+        }
+
+        push_inside_to_process
+        
+        int parsed_command;
+        for (std::string command_line: processed_lines) {
+            std::vector<std::string> parts = Parsing::split_string(command_line, Parsing::space);
+            
+            if ((parsed_command = Parsing::commandNameToArgumentsFunc(parts[0])) == -1) {
+                //TODO send error message to client
+            } else {
+                //TODO execute command the commands arguments is everything in parts[1], parts[2]...
+            }
+
+            /*for debugging*/
+            std::cout << "parts of client input ";
+            for (std::string part: parts) {
+                std::cout << part << "\n";
+            }
+            std::cout << "\n\n";
+            /*end of stuff for debugging*/
+        } 
+        
+    }
+    snprintf(buffer, SOCKET_BUFFER_SIZE, "%s\n");
+    send(socket_id, HELLO_WORLD, sizeof HELLO_WORLD, 0);
+    printf("hello message sent\n");
+
     pthread_exit(NULL/*a return value available to the thread doing join on this thread*/);
 
 }
@@ -91,13 +150,11 @@ void search(char *pattern) {
 // Parse the rass.conf file
 // Listen to the port and handle each connection
 int main() {
-    int server_fd, new_socket, valread;
+    int server_fd, new_socket;
     //specifies a transport address and port for the Ipv4
     struct sockaddr_in address;
 
     int addrlen = sizeof(address);
-
-    char buffer[SOCKET_BUFFER_SIZE] = {0};
 
     //an int where we store options of the socket
     int opt = 1;
@@ -170,10 +227,7 @@ int main() {
         client_handlers.push_back(new_thread);
         client_handlers_mutex.unlock();
 
-        valread = read(new_socket, buffer, SOCKET_BUFFER_SIZE);
-        snprintf(buffer, SOCKET_BUFFER_SIZE, "%s\n");
-        send(new_socket, HELLO_WORLD, sizeof HELLO_WORLD, 0);
-        printf("hello message sent\n");
+
     }
 
     //should we clean up when a kill signal is received by this app like CTRL+C?
