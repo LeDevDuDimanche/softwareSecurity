@@ -118,7 +118,8 @@ int main() {
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
     //change byte order according to make it match the big endian TCP/IP network byte order.
-    address.sin_port = htons( PORT );
+    long server_port = PORT;
+    address.sin_port = htons( server_port );
 
    if (bind(server_fd, (struct sockaddr *)&address,
                                  sizeof(address))<0)
@@ -136,7 +137,7 @@ int main() {
 
     forever
     {
-        printf("waiting for a connection\n");
+        printf("waiting for a connection on port %ld\n", server_port);
 
         //a blocking call
         if ((new_socket = accept(server_fd, (struct sockaddr *)&address,
@@ -144,7 +145,7 @@ int main() {
         {
             server_failure("accept");
         }
-        printf("handling new connection");
+        printf("handling new connection\n");
 
         if ((ret_create = pthread_create(&new_thread, NULL /*default attributes*/,
              connection_handler, (void *) new_socket)))
