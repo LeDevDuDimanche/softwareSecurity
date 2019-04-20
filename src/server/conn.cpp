@@ -10,13 +10,14 @@ std::string getConfFilepath() {
     return "./grass.conf";
 }
 
-conn::conn(std::string currentDir, std::string baseDir, UserReadTable *urt, FileDeleteTable *fd)
+conn::conn(std::string currentDir, std::string baseDir, UserReadTable *urt, FileDeleteTable *fd, ActiveUserTable *at)
 {
     this->currentDir = currentDir;
     this->baseDir = baseDir;
     this->fileDeleteTable = fd;
     this->userReadTable = urt;
     this->loginStatus = -1;
+    this->activeUserTable = at;
 }
 
 std::string conn::getBase() {

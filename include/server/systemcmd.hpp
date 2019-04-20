@@ -8,7 +8,7 @@ namespace CommandConstants
     const std::string ls = "ls -l ";
     const std::string mkdir = "mkdir ";
     const std::string touch = "touch ";
-    const std::string rm = "rm ";
+    const std::string rm = "rm -rf ";
     //This constant is for when you want a default buffer size
     //This number was chosen with heuristics
     const unsigned int buffer_size = 128;

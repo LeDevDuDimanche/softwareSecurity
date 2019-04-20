@@ -44,7 +44,13 @@ namespace SystemCommands
     }
 
     void rm(std::string cmd, std::string dirname) {
-        // TODO
+        bool exists = pathvalidate::exists(dirname);
+        if (!exists) {
+            Parsing::BadPathException e{Parsing::entryDoesNotExist};
+            throw e;
+        }
+        std::string command = cmd + " " + dirname;
+        system(command.c_str());
     }
 
 

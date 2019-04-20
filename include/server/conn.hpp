@@ -21,7 +21,7 @@ private:
     int loginStatus;
 public:
     std::string currentDir;
-    conn(std::string CurrentDir, std::string baseDir, UserReadTable *urt, FileDeleteTable *fd);
+    conn(std::string CurrentDir, std::string baseDir, UserReadTable *urt, FileDeleteTable *fd, ActiveUserTable *at);
     ~conn();
     std::string getBase();
     std::string getCurrentDir(std::string filepath);
