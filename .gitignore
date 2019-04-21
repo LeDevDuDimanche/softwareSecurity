@@ -2,5 +2,11 @@
 /bin/
 /obj/
 
+# Temporary directory created during integration tests
+/test/temp/
+
+# Python cached bytecode files
+__pycache__/
+
 # IDE configuration
 .vscode/
