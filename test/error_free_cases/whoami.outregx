@@ -1,0 +1,2 @@
+(.+\n)*    # any number of lines for answers to `login` and `pass`
+03_-User\n

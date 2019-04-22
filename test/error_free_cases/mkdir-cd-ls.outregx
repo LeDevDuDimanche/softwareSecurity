@@ -1,0 +1,2 @@
+(.+\n)*    # any number of lines for answers to `login`, `pass`, `mkdir` and `cd`
+total[ ]0\n
