@@ -51,6 +51,10 @@ OUT_FILE_PATH = TEMP_DIR / OUT_FILENAME
 STARTUP_WAIT = 0.01
 TIMEOUT = 0.1
 
+RED = "\033[0;31m"
+GREEN = "\033[0;32m"
+END_COLOR = "\033[0m"
+
 
 def get_tests():
     """Yield all tests."""
@@ -178,9 +182,9 @@ def run_test(test):
     """Run a test and print results."""
     name, passed, info = test()
     if passed:
-        print(name, "passed")
+        print(f"{GREEN}{name} passed{END_COLOR}")
     else:
-        print(name, "FAILED")
+        print(f"{RED}{name} FAILED{END_COLOR}")
         print(info)
         print()
 
@@ -224,8 +228,8 @@ def get_regex_test(name, in_path, out_path, file_io=False,
                     if OUT_FILE_PATH.exists():
                         OUT_FILE_PATH.unlink()
                 except OSError as e:
-                    print("Warning for the following test case: Couldn't "
-                          f"remove client output file: {e}")
+                    print("Warning regarding the following test case: "
+                          f"Couldn't remove client output file: {e}")
         else:
             try:
                 in_bytes = in_path.read_bytes()
