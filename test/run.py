@@ -21,12 +21,14 @@ This script requires Python 3.6 or higher."""
 import pathlib
 import re
 import shutil
+import subprocess
+import time
 
 
 # `HERE` is the directory this script is located in.
 HERE = pathlib.Path(__file__).resolve().parent
 TEMP_DIR = HERE / 'temp'
-CASES_DIR = HERE / 'cases'
+ERROR_FREE_DIR = HERE / 'error_free_cases'
 BIN_DIR = HERE.parent / 'bin'
 TEST_CONFIG = HERE / 'grass_test.conf'
 
@@ -36,8 +38,18 @@ OUT_SUFFIX = '.outregx'
 CLIENT = 'client'
 SERVER = 'server'
 BINARIES = CLIENT, SERVER
+CLIENT_PATH = TEMP_DIR / CLIENT
 SERVER_PATH = TEMP_DIR / SERVER
 CONFIG_PATH = TEMP_DIR / 'grass.conf'
+IP_ADDRESS = '127.0.0.1'
+PORT = 2405
+
+ERROR_REGEX = re.compile(rb'^ERROR', re.MULTILINE)
+
+OUT_FILENAME = 'stdout.txt'
+OUT_FILE_PATH = TEMP_DIR / OUT_FILENAME
+STARTUP_WAIT = 0.01
+TIMEOUT = 0.1
 
 
 def get_tests():
@@ -45,10 +57,16 @@ def get_tests():
 
     yield test_hijack_exists
 
-    for in_path in sorted(CASES_DIR.glob(IN_PATTERN)):
+    error_free_cases = sorted(ERROR_FREE_DIR.glob(IN_PATTERN))
+    if not error_free_cases:
+        print("Error: couldn't find any 'error-free' test cases")
+
+    for in_path in error_free_cases:
         out_path = in_path.with_suffix(OUT_SUFFIX)
-        name = "output-" + in_path.stem
+        name = "stdout-" + in_path.stem
+        file_io_name = "file-io-" + in_path.stem
         yield get_regex_test(name, in_path, out_path)
+        yield get_regex_test(file_io_name, in_path, out_path, file_io=True)
 
 
 def setup():
@@ -67,7 +85,7 @@ def setup():
             shutil.copy(BIN_DIR / binary, TEMP_DIR / binary)
         except OSError:
             print(f"Error in setup: couldn't copy {binary}.  (Run `make` "
-                   "before testing!)")
+                  "before testing!)")
             return False
 
     try:
@@ -80,7 +98,7 @@ def setup():
 
 
 def cleanup():
-    """Clean up after tests."""
+    """Clean up after testing."""
 
     try:
         CONFIG_PATH.unlink()
@@ -101,10 +119,58 @@ def cleanup():
               "files they generate!)")
 
 
+def run_system(in_bytes):
+    """Run a client and server and return their respective output.
+
+    Raise a `subprocess.SubprocessError` on error."""
+
+    client_args = IP_ADDRESS, str(PORT)
+    return run_system_processes(client_args, in_bytes)
+
+
+def run_system_file_io(in_path):
+    """Run a client and server and return the server's output.
+
+    Raise a `subprocess.SubprocessError` on error."""
+
+    client_args = IP_ADDRESS, str(PORT), str(in_path), OUT_FILENAME
+    _, server_output = run_system_processes(client_args)
+    return server_output
+
+
+def run_system_processes(client_args, in_bytes=None):
+    """Run a client and server and return their `subprocess.CompletedProcess`.
+
+    Raise a `subprocess.SubprocessError` on error."""
+
+    kwargs = dict(stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                  cwd=TEMP_DIR)
+
+    try:
+        with subprocess.Popen(str(SERVER_PATH), **kwargs) as server_process:
+            time.sleep(STARTUP_WAIT)
+            args = [str(CLIENT_PATH), *client_args]
+            client = subprocess.run(args, **kwargs, input=in_bytes,
+                                    timeout=TIMEOUT, check=True)
+            server_process.kill()
+            server_output, _ = server_process.communicate()
+    except OSError as e:
+        message = f"Couldn't run the subprocesses: {e}"
+        raise subprocess.SubprocessError(message) from None
+
+    return client.stdout, server_output
+
+
+def present_output(text_bytes, title):
+    """Return the bytes in a readable representation."""
+    text = escape_decode(text_bytes)
+    return f'----- {title} -----\n' + text + f"----- END {title} -----"
+
+
 def escape_decode(text_bytes):
     """Decode bytes with ASCII encoding, escaping non-printable characters."""
     text = text_bytes.decode('latin-1')
-    escaped = (ascii(char)[1:-1] if char != '\n' else char for char in text)
+    escaped = (char if char == '\n' else ascii(char)[1:-1] for char in text)
     return ''.join(escaped)
 
 
@@ -125,7 +191,8 @@ def test_hijack_exists():
     return "hijack-exists", passed, info
 
 
-def get_regex_test(name, in_path, out_path):
+def get_regex_test(name, in_path, out_path, file_io=False,
+                   may_trigger_errors=False):
     """Return a test function.
 
     The returned test function compared uses the contents of the file at
@@ -134,24 +201,54 @@ def get_regex_test(name, in_path, out_path):
 
     def test():
         try:
-            in_bytes = in_path.read_bytes()
-        except OSError:
-            return name, False, "Couldn't read the input file."
-
-        try:
             out_pattern = out_path.read_bytes()
         except OSError:
             return name, False, "Couldn't read the output pattern file."
 
-        out_bytes = b'TODO\n'
+        if file_io:
+            try:
+                try:
+                    server_bytes = run_system_file_io(in_path)
+                except subprocess.SubprocessError as e:
+                    return name, False, str(e)
 
-        if not re.fullmatch(out_pattern, out_bytes, re.VERBOSE):
+                try:
+                    client_bytes = OUT_FILE_PATH.read_bytes()
+                except OSError:
+                    return name, False, "Couldn't read the client output file."
+            finally:
+                try:
+                    if OUT_FILE_PATH.exists():
+                        OUT_FILE_PATH.unlink()
+                except OSError as e:
+                    print("Warning for the following test case: Couldn't "
+                          f"remove client output file: {e}")
+        else:
+            try:
+                in_bytes = in_path.read_bytes()
+            except OSError:
+                return name, False, "Couldn't read the input file."
+
+            try:
+                client_bytes, server_bytes = run_system(in_bytes)
+            except subprocess.SubprocessError as e:
+                return name, False, str(e)
+
+        if not may_trigger_errors:
+            if ERROR_REGEX.search(server_bytes):
+                info = ("Unexpected error message in server output.\n" +
+                        present_output(server_bytes, "SERVER OUTPUT"))
+                return name, False, info
+            if ERROR_REGEX.search(client_bytes):
+                info = ("Unexpected error message in client output.\n" +
+                        present_output(client_bytes, "CLIENT OUTPUT"))
+                return name, False, info
+
+        if not re.fullmatch(out_pattern, client_bytes, re.VERBOSE):
             info = ("Unexpected client output.\n"
-                    "#### EXPECTED (regex) ####\n" +
+                    "----- EXPECTED (regex) -----\n" +
                     out_pattern.decode('ascii') +
-                    "#### ACTUAL ####\n" +
-                    escape_decode(out_bytes) +
-                    "#### END ####")
+                    present_output(client_bytes, "CLIENT OUTPUT"))
             return name, False, info
 
         return name, True, None

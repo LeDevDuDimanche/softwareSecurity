@@ -1,2 +1,0 @@
-(.+\n)+    # any number of lines for `login` and `pass`
-\d\d[ ][A-Z][a-z]{2}[ ]\d\d:\d\d:\d\d\n
