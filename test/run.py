@@ -63,9 +63,9 @@ def get_tests():
 
     for in_path in error_free_cases:
         out_path = in_path.with_suffix(OUT_SUFFIX)
-        name = "stdout-" + in_path.stem
-        file_io_name = "file-io-" + in_path.stem
-        yield get_regex_test(name, in_path, out_path)
+        stdout_name = in_path.stem + "-stdout"
+        file_io_name = in_path.stem + "-file-io"
+        yield get_regex_test(stdout_name, in_path, out_path)
         yield get_regex_test(file_io_name, in_path, out_path, file_io=True)
 
 
@@ -186,7 +186,7 @@ def run_test(test):
 
 
 def test_hijack_exists():
-    passed = b"Method hijack: Accepted\n" in SERVER_PATH.read_bytes()
+    passed = b"Method hijack: Accepted" in SERVER_PATH.read_bytes()
     info = "The hijack function wasn't compiled into the server binary."
     return "hijack-exists", passed, info
 
@@ -211,6 +211,9 @@ def get_regex_test(name, in_path, out_path, file_io=False,
                     server_bytes = run_system_file_io(in_path)
                 except subprocess.SubprocessError as e:
                     return name, False, str(e)
+
+                if not OUT_FILE_PATH.exists():
+                    return name, False, "The client output file doesn't exist."
 
                 try:
                     client_bytes = OUT_FILE_PATH.read_bytes()
