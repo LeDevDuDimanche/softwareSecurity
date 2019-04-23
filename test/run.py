@@ -180,7 +180,7 @@ def run_system_processes(client_args, should_exit, in_bytes=None):
 def present_output(text_bytes, title):
     """Return the bytes in a readable representation."""
     text = escape_decode(text_bytes)
-    return f'----- {title} -----\n' + text + f"----- END {title} -----"
+    return f"----- {title} -----\n{text}----- END {title} -----"
 
 
 def escape_decode(text_bytes):
@@ -191,7 +191,7 @@ def escape_decode(text_bytes):
 
 
 def run_test(test):
-    """Run a test and print results."""
+    """Run a test, print results and return True if it passed."""
     name, passed, info = test()
     if passed:
         print(f"{GREEN}{name} passed{END_COLOR}")
@@ -199,6 +199,7 @@ def run_test(test):
         print(f"{RED}{name} FAILED{END_COLOR}")
         print(info)
         print()
+    return passed
 
 
 def test_hijack_exists():
@@ -238,10 +239,9 @@ def get_regex_test(name, in_path, out_path, file_io=False,
                 except subprocess.SubprocessError as e:
                     return name, False, str(e)
 
-                if not OUT_FILE_PATH.exists():
-                    return name, False, "The client output file doesn't exist."
-
                 try:
+                    if not OUT_FILE_PATH.exists():
+                        return name, False, "Client output file doesn't exist."
                     client_bytes = OUT_FILE_PATH.read_bytes()
                 except OSError:
                     return name, False, "Couldn't read the client output file."
@@ -259,7 +259,6 @@ def get_regex_test(name, in_path, out_path, file_io=False,
                 return name, False, "Couldn't read the input file."
 
             try:
-
                 client_bytes, server_bytes = run_system(in_bytes, should_exit)
             except subprocess.SubprocessError as e:
                 return name, False, str(e)
@@ -288,13 +287,23 @@ def get_regex_test(name, in_path, out_path, file_io=False,
 
 def main():
     """Run the test suite."""
+
     tests = list(get_tests())
+
+    num_passed = 0
+    num_failed = 0
     try:
         if setup():
             for test in tests:
-                run_test(test)
+                if run_test(test):
+                    num_passed += 1
+                else:
+                    num_failed += 1
     finally:
         cleanup()
+
+    print(f"Passed {num_passed} test{'s' if num_passed != 1 else ''} and "
+          f"failed {num_failed}.")
 
 
 if __name__ == '__main__':
