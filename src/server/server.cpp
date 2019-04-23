@@ -10,6 +10,10 @@
 #include <server/commandParsing.hpp>
 #include <unistd.h>
 
+#include <server/FileDeleteTable.hpp>
+#include <server/ActiveUserTable.hpp>
+#include <server/UserReadTable.hpp>
+
 #define IP_PROT 0
 #define SOCKET_QUEUE_LENGTH 3
 #define forever for(;;)
@@ -20,7 +24,13 @@
 static struct User **userlist;
 static int numUsers;
 static struct Command **cmdlist;
+static std::string basedir;
 static int numCmds;
+
+static FileDeleteTable fileDeleteTable;
+static UserReadTable userReadTable;
+static ActiveUserTable activeUserTable;
+
 static std::mutex client_handlers_mutex;
 static std::vector<pthread_t> client_handlers = {};
 
@@ -76,6 +86,10 @@ void *connection_handler(void* sockfd) {
     std::vector<std::string> processed_lines;
     std::string read_str;
     int buffer_idx, end_last_copy;
+ 
+    conn thread_conn = conn(basedir, basedir, &userReadTable, &fileDeleteTable, &activeUserTable);
+
+    //TODO change the condition that we end this loop to the fact that we process a CTRL+C character
     while ((valread = read(socket_id, buffer, SOCKET_BUFFER_SIZE)) > 0 && valread < SOCKET_BUFFER_SIZE)
     {
         read_str = std::string(buffer, valread);
@@ -103,23 +117,11 @@ void *connection_handler(void* sockfd) {
 
         push_inside_to_process
         
-        int parsed_command;
-        for (std::string command_line: processed_lines) {
-            std::vector<std::string> parts = Parsing::split_string(command_line, Parsing::space);
-            
-            if ((parsed_command = Parsing::commandNameToArgumentsFunc(parts[0])) == -1) {
-                //TODO send error message to client
-            } else {
-                //TODO execute command the commands arguments is everything in parts[1], parts[2]...
-            }
-
-            /*for debugging*/
-            std::cout << "parts of client input ";
-            for (std::string part: parts) {
-                std::cout << part << "\n";
-            }
-            std::cout << "\n\n";
-            /*end of stuff for debugging*/
+        int nb_args_needed;
+        for (std::string command_line: processed_lines) { 
+            std::cout << "TODO remove this printf: command line to execute " << command_line << "\n";
+            command::run_command(thread_conn, command_line);
+            //TODO flush what is the conn object to the client
         } 
         
     }
@@ -177,8 +179,9 @@ int main() {
     std::string conf_path = getConfFilepath();
     //change byte order according to make it match the big endian TCP/IP network byte order.
 
-   
+    
     long server_port = getConfPort(conf_path);  
+    basedir = getConfBaseDir(conf_path);
     address.sin_port = htons( server_port );
 
    if (bind(server_fd, (struct sockaddr *)&address,

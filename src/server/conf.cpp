@@ -35,15 +35,28 @@ bool checkIfUserExists(std::string username, std::string filename) {
     }
     return false;
 }
- 
-long getConfPort(std::string filename) {
-    std::vector<std::string> ports = getLinesThatStartWithKeyWord("port", filename);
-    if (ports.size() != 1) {
+
+std::string getUniqueMatchValue(std::string filename, std::string keyword, int info_idx) {
+    std::vector<std::string> matches = getLinesThatStartWithKeyWord(keyword, filename);
+    if (matches.size() != 1) {
         server_failure("wrong number of ports specification in configuration file");
+    } 
+    std::vector<std::string> matches_infos = 
+        Parsing::split_string(matches.front(), Parsing::space);
+    if (info_idx < matches_infos.size()) {
+        return matches_infos[info_idx];
+    } else {
+        server_failure("out of bound argument requested from configuration file");
     }
-    std::string port_line = ports.front();
-    std::vector<std::string> port_info = Parsing::split_string(port_line, Parsing::space);
-    return std::stol(port_info[1]);
+}
+
+std::string getConfBaseDir(std::string filename) {
+    return getUniqueMatchValue(filename, "base", 1);
+}
+ 
+long getConfPort(std::string filename) { 
+    std::string port_as_str = getUniqueMatchValue(filename, "port", 1); 
+    return std::stol(port_as_str);
 
 }
 

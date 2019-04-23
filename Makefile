@@ -3,7 +3,7 @@ CXXFLAGS = -std=c++11 -Wall -Wextra -g -fno-stack-protector -z execstack -pthrea
 
 include_flag = -I include/
 
-names = client server
+names = client server 
 binaries := $(names:%=bin/%)
 
 shared_src := $(wildcard src/*.cpp)

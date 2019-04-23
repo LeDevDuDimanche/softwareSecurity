@@ -29,5 +29,6 @@ namespace command
     void grep(conn& conn, std::string pattern);
     void w(conn& conn);
     void whoami(conn& conn);
+    void run_command(conn& conn, std::string commandLine);
 }
 #endif

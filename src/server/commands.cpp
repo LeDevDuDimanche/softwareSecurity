@@ -24,6 +24,7 @@ namespace command
             conn.send_error(AuthenticationMessages::userDoesNotExist);
             return;
         }
+        conn.setUser(username);
         conn.setLoginStatus(AuthenticationMessages::authenticatingStatus);
     }
     void pass(conn& conn, std::string pw) {

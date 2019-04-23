@@ -80,8 +80,8 @@ namespace Parsing
     }
 
     bool hasCommand(std::string command) {
-        int argumentTotal = commandNameToArgumentsFunc(command);
-        return argumentTotal == -1; 
+        int argumentTotal = commandNameToArgumentsFunc(command); 
+        return argumentTotal != -1; 
     }
     int getArgumentTotalForCommand(std::string command) { 
         bool exists = hasCommand(command);
