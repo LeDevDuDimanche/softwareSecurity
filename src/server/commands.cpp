@@ -49,7 +49,8 @@ namespace command
     void logout(conn& conn) {
         //TODO
         conn.clearRead();
-        conn.clearLogin(); 
+        conn.clearLogin();
+        conn.currentDir = "";
         conn.send_message(AuthenticationMessages::logutMessage);
     }
     //Directory traversal commands
@@ -60,10 +61,11 @@ namespace command
             return;
         }
         std::string absoluteDir = conn.getCurrentDir(dir);
+        //std::cout << "Absolutedir: " << absoluteDir << std::endl;
         std::string base = conn.getBase();
         std::string oldCurrentDir = conn.currentDir;
         try {
-            std::string newPath = Parsing::resolve_path(base, base + conn.currentDir , dir);
+            std::string newPath = Parsing::resolve_path(base, conn.getCurrentDir("") , dir);
             std::string relativePath = Parsing::get_relative_path(base, newPath);
             if (pathvalidate::isDir(newPath)) {
                 bool isBeingDeleted = conn.isBeingDeleted(newPath);
@@ -124,6 +126,7 @@ namespace command
         catch(Parsing::BadPathException e) {
             conn.send_error(e.getDesc());
         }
+        std::cout <<"removing file as read " << std::endl;
         conn.removeFileAsRead(resolved);
     }
     void rm(conn& conn, std::string filename) {
@@ -195,6 +198,9 @@ namespace command
             if (!hasRightArguments) {
                 conn.send_error("Not the right argument total");
                 return;
+            }
+            if (commandName == "rm") {
+                rm(conn, splitBySpace[1]);
             }
             if (commandName == "cd") {
                 cd(conn, splitBySpace[1]);

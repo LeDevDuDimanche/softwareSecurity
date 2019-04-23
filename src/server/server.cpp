@@ -87,7 +87,7 @@ void *connection_handler(void* sockfd) {
     std::string read_str;
     int buffer_idx, end_last_copy;
  
-    conn thread_conn = conn(basedir, basedir, &userReadTable, &fileDeleteTable, &activeUserTable);
+    conn thread_conn = conn("", basedir, &userReadTable, &fileDeleteTable, &activeUserTable);
 
     //TODO change the condition that we end this loop to the fact that we process a CTRL+C character
     while ((valread = read(socket_id, buffer, SOCKET_BUFFER_SIZE)) > 0 && valread < SOCKET_BUFFER_SIZE)

@@ -44,7 +44,6 @@ namespace Parsing
     }
     std::string join_vector(std::vector<std::string> v, std::string join) {
         std::stringstream ss;
-        ss << join;
         for(size_t i = 0; i < v.size(); ++i)
         {
           if(i != 0)
@@ -59,7 +58,7 @@ namespace Parsing
         std::vector<std::string> baseVec = split_string(base, slash);
         std::vector<std::string> currentDirVec = split_string(currentDir, slash);
         std::vector<std::string> pathVec = split_string(path, slash);
-        for (std::string dir: pathVec) {
+        for (std::string dir: pathVec) { 
             if (currentDirVec.empty()) {
                 break;
             }
@@ -73,8 +72,10 @@ namespace Parsing
             currentDirVec.push_back(dir);
         }
         std::string newCurrentDir = join_vector(currentDirVec, join_path);
+        std::cout << "New current dir: " << newCurrentDir << std::endl;
         size_t found = newCurrentDir.find(base);
         if (found != 0) {
+            std::cout << "Error thrown " << std::endl;
             BadPathException e{badPath};
             throw e;
         }

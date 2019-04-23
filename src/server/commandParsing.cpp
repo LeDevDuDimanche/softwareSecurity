@@ -10,6 +10,9 @@ namespace Parsing
         if (commandName == "cd") {
             return 1;
         }
+        if (commandName == "rm") {
+            return 1;
+        }
         if (commandName == "ls") {
             return 0;
         }

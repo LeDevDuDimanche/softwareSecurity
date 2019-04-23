@@ -29,10 +29,14 @@ void conn::send_error(std::string err) {
 }
 
 void conn::send_message(std::string msg) {
+    std::cout << "Successfully ran the command" << std::endl;
     std::cout << msg << std::endl;
 }
 std::string  conn::getCurrentDir(std::string filepath) {
-    return (this->baseDir) + (this->currentDir) + filepath;
+    if (this->currentDir == "") {
+        return this->baseDir + Parsing::join_path + filepath;
+    }
+    return (this->baseDir) + Parsing::join_path + (this->currentDir) + Parsing::join_path + filepath;
 }
 
 conn::~conn()

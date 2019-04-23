@@ -22,6 +22,7 @@ namespace pathvalidate
 
     bool isDir(std::string dir) {
         struct stat st;
+        std::cout << (stat(dir.c_str(), &st) != 0) << "Random bool " << std::endl;
         if(stat(dir.c_str(), &st) != 0) {
             return false;
         }

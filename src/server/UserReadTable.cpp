@@ -5,6 +5,7 @@
 #include <server/UserReadTable.hpp>
 
 bool hasKey(std::map<std::string,std::set<std::string>> m, std::string key) {
+    std::cout << "Size: " << m.size() << std::endl; 
     if (m.find(key) != m.end()) {
         return false;
     }
@@ -39,6 +40,7 @@ void UserReadTable::removeFile(std::string filename, std::string user) {
         std::string current_path = Parsing::join_vector(split_filename, Parsing::join_path);
         if (!hasKey(this->FilesBeingRead, current_path)) {
             //Something is wack
+            std::cout << "Wack: " << current_path << std::endl;
             continue;
         }
         //std::set<std::string> readers = this->FilesBeingRead[current_path];
@@ -49,9 +51,8 @@ void UserReadTable::removeFile(std::string filename, std::string user) {
 }
 bool UserReadTable::isBeingRead(std::string filename) {
     if (!hasKey(this->FilesBeingRead, filename)) {
-        return true;
-    }
-    return false; // TODO
+        return false;
+    }   
     std::set<std::string>  readers = this->FilesBeingRead[filename];
     return readers.find(filename) != readers.end();
 }
