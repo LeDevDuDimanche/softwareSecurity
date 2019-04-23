@@ -288,8 +288,9 @@ def get_regex_test(name, in_path, out_path, file_io=False,
 def main():
     """Run the test suite."""
 
-    tests = list(get_tests())
+    start = time.perf_counter()
 
+    tests = list(get_tests())
     num_passed = 0
     num_failed = 0
     try:
@@ -302,6 +303,8 @@ def main():
     finally:
         cleanup()
 
+    timing = time.perf_counter() - start
+    print(f"Took {timing:.2f} seconds to run {len(tests)} tests.")
     print(f"Passed {num_passed} test{'s' if num_passed != 1 else ''} and "
           f"failed {num_failed}.")
 
