@@ -34,6 +34,7 @@ TEST_CONFIG = HERE / 'grass_test.conf'
 
 IN_PATTERN = '*.in'
 OUT_SUFFIX = '.outregx'
+EXIT = 'exit'
 
 CLIENT = 'client'
 SERVER = 'server'
@@ -123,26 +124,26 @@ def cleanup():
               "files they generate!)")
 
 
-def run_system(in_bytes):
+def run_system(in_bytes, should_exit):
     """Run a client and server and return their respective output.
 
     Raise a `subprocess.SubprocessError` on error."""
 
     client_args = IP_ADDRESS, str(PORT)
-    return run_system_processes(client_args, in_bytes)
+    return run_system_processes(client_args, should_exit, in_bytes)
 
 
-def run_system_file_io(in_path):
+def run_system_file_io(in_path, should_exit):
     """Run a client and server and return the server's output.
 
     Raise a `subprocess.SubprocessError` on error."""
 
     client_args = IP_ADDRESS, str(PORT), str(in_path), OUT_FILENAME
-    _, server_output = run_system_processes(client_args)
+    _, server_output = run_system_processes(client_args, should_exit)
     return server_output
 
 
-def run_system_processes(client_args, in_bytes=None):
+def run_system_processes(client_args, should_exit, in_bytes=None):
     """Run a client and server and return their `subprocess.CompletedProcess`.
 
     Raise a `subprocess.SubprocessError` on error."""
@@ -154,15 +155,26 @@ def run_system_processes(client_args, in_bytes=None):
         with subprocess.Popen(str(SERVER_PATH), **kwargs) as server_process:
             time.sleep(STARTUP_WAIT)
             args = [str(CLIENT_PATH), *client_args]
-            client = subprocess.run(args, **kwargs, input=in_bytes,
-                                    timeout=TIMEOUT, check=True)
+            try:
+                client = subprocess.run(args, **kwargs, input=in_bytes,
+                                        timeout=TIMEOUT, check=True)
+            except subprocess.TimeoutExpired as e:
+                if should_exit:
+                    message = "Client failed to exit and timed out."
+                    raise subprocess.SubprocessError(message) from None
+                client_output = e.stdout
+            else:
+                if not should_exit:
+                    message = "Client exited unexpectedly."
+                    raise subprocess.SubprocessError(message)
+                client_output = client.stdout
             server_process.kill()
             server_output, _ = server_process.communicate()
     except OSError as e:
         message = f"Couldn't run the subprocesses: {e}"
         raise subprocess.SubprocessError(message) from None
 
-    return client.stdout, server_output
+    return client_output, server_output
 
 
 def present_output(text_bytes, title):
@@ -190,9 +202,16 @@ def run_test(test):
 
 
 def test_hijack_exists():
-    passed = b"Method hijack: Accepted" in SERVER_PATH.read_bytes()
+    name = "hijack-exists"
+
+    try:
+        server_binary = SERVER_PATH.read_bytes()
+    except OSError:
+        return name, False, "Couldn't read the server binary."
+
+    passed = b"Method hijack: Accepted" in server_binary
     info = "The hijack function wasn't compiled into the server binary."
-    return "hijack-exists", passed, info
+    return name, passed, info
 
 
 def get_regex_test(name, in_path, out_path, file_io=False,
@@ -204,6 +223,9 @@ def get_regex_test(name, in_path, out_path, file_io=False,
     output should match the regular expression in the file at `out_path`."""
 
     def test():
+        # `should_exit` is True if the client should exit.
+        should_exit = EXIT in name
+
         try:
             out_pattern = out_path.read_bytes()
         except OSError:
@@ -212,7 +234,7 @@ def get_regex_test(name, in_path, out_path, file_io=False,
         if file_io:
             try:
                 try:
-                    server_bytes = run_system_file_io(in_path)
+                    server_bytes = run_system_file_io(in_path, should_exit)
                 except subprocess.SubprocessError as e:
                     return name, False, str(e)
 
@@ -237,7 +259,8 @@ def get_regex_test(name, in_path, out_path, file_io=False,
                 return name, False, "Couldn't read the input file."
 
             try:
-                client_bytes, server_bytes = run_system(in_bytes)
+
+                client_bytes, server_bytes = run_system(in_bytes, should_exit)
             except subprocess.SubprocessError as e:
                 return name, False, str(e)
 
