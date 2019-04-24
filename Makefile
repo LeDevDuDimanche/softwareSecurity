@@ -37,7 +37,6 @@ obj/%.o: src/%.cpp
 
 clean:
 	rm -f $(remove)
-	rm -f bin/test src/*.o src/*/*.o    # TODO: We can remove this line later
 
 
 -include $(all_dep)
