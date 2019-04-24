@@ -47,7 +47,11 @@ namespace command
         conn.setLogin();
     }
     void logout(conn& conn) {
-        //TODO
+        bool isLoggedIn = conn.isLoggedIn();
+        if (!isLoggedIn) {
+            conn.send_error(AuthenticationMessages::mustBeLoggedIn);
+            return;
+        }
         conn.clearRead();
         conn.clearLogin();
         conn.currentDir = "";

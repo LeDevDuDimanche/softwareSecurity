@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <algorithm>
 
 #include <server/parsing.hpp>
 
@@ -9,6 +10,40 @@
 
 namespace Parsing
 {
+
+    std::vector<size_t> get_all_occurences(std::string s, char sub) {
+        std::string str;
+        std::vector<size_t> positions; // holds all the positions that sub occurs within str
+        size_t l = s.size();
+    	for ( size_t i = 0; i < l;i++) {
+    		if(s[i] == sub)  {
+    			positions.push_back(i);
+    		}
+    	}
+        return positions;
+    }
+    void replace_spaces(std::string& line, char rand_char) {
+        std::vector<size_t> positions = get_all_occurences(line, '\"');
+    	std::vector<size_t> space_positions = get_all_occurences(line, ' ');
+        size_t l = positions.size();
+        for (size_t i = 0; i < l;i += 2) {
+            std::string sub = line.substr(positions[i], positions[i+1]);
+    		for (size_t pos: space_positions) {
+    			if (pos > positions[i] && positions[i+1] > pos) {
+    				line[pos] = rand_char;
+    			} 
+    		}
+        }
+    }
+
+    void put_spaces(std::string& line, char delimiter) {
+        size_t l = line.size();
+        for (size_t i = 0; i < l;i++) {
+            if(line[i] == delimiter) {
+                line[i] = space; 
+            }
+        }
+    }
 
     BadPathException::BadPathException(std::string desc) {
         this->desc = desc;
@@ -32,12 +67,14 @@ namespace Parsing
     }
     std::vector<std::string> split_string(std::string s, char delim) {
         std::vector<std::string> vec;
+        replace_spaces(s, delimiter);
         std::stringstream ss(s);
         std::string token;
         while(std::getline(ss, token, delim)) {
             if (token.empty()) {
                 continue;
             }
+            put_spaces(token, delimiter);
             vec.push_back(token);
         }
         return vec;
