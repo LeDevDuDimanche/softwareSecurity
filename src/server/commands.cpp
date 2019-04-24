@@ -26,6 +26,7 @@ namespace command
         }
         conn.setUser(username);
         conn.setLoginStatus(AuthenticationMessages::authenticatingStatus);
+        conn.send_message("Almost logged in send your password\n");
     }
     void pass(conn& conn, std::string pw) {
         std::string confPath = getConfFilepath();
