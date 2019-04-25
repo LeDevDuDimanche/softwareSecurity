@@ -35,7 +35,7 @@ namespace Parsing
             return 0;
         }
         if (commandName == "ping") {
-            return 0;
+            return 1;
         } 
         if (commandName == "login") {
             return 1;

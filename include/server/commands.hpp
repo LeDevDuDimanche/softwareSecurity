@@ -9,7 +9,7 @@
 namespace command
 {
     //Commands that do not require authentication
-    void ping(conn& conn);
+    void ping(conn& conn, std::string host);
     void exit(conn& conn);
     //Authentication commands
     void login(conn& conn, std::string username);

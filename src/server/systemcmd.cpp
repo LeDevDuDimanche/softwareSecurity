@@ -1,6 +1,11 @@
 #include <server/systemcmd.hpp>
 #include <server/pathvalidate.hpp>
 #include <server/parsing.hpp>
+#include <chrono>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+
 
 
 namespace SystemCommands
@@ -11,8 +16,31 @@ namespace SystemCommands
 	    	buffer[i] = '\0'; 
 	    }
     }
+    std::string ping(std::string host) {
+        auto sec = std::chrono::seconds(1);
+        //Used for the timeout
+        std::mutex m;
+        std::condition_variable cv;
+        std::string pingRetValue;
+        std::thread t([&cv, &pingRetValue, &host]()
+        {
+            pingRetValue = command_with_output(CommandConstants::ping, host); 
+            cv.notify_one();
+        });
 
-    std::string ls(std::string cmd, std::string dirname) {
+        t.detach();
+        {
+            std::unique_lock<std::mutex> l(m);
+            if(cv.wait_for(l, 5*sec) == std::cv_status::timeout) 
+                throw std::runtime_error("Host did not respond");
+        }
+        return pingRetValue;
+    }
+
+    std::string command_with_output(std::string cmd, std::string dirname) {
+        char buffer[CommandConstants::buffer_size];
+        std::vector<std::string> lines;
+	    int index = 0;
         char newLine = '\n';
 	    FILE *fpipe;
         char c = 0;
@@ -22,12 +50,8 @@ namespace SystemCommands
             perror("popen() failed.");
             exit(1);
         }
-	    std::vector<std::string> lines;
-	    char buffer[256];
-	    int index = 0;
         while (fread(&c, sizeof c, 1, fpipe))
         {
-            //printf("%c", c);
 	    	buffer[index++] = c;
 	    	if (c == newLine) {
 	    		std::string temp{buffer};
@@ -37,11 +61,10 @@ namespace SystemCommands
 
 	    	}
         }
-	    for(std::string line: lines) {
-	    	std::cout << line;
-	    }
         pclose(fpipe);
         std::string retStr = Parsing::join_vector(lines, "");
+        //This is for when there is no host
+        //std::cout << "Something up: " << retStr << std::endl;
         return retStr;
     }
     void mkdir(std::string cmd, std::string dirname) {
@@ -70,6 +93,18 @@ namespace SystemCommands
         }
         std::string command = cmd + " " + dirname;
         system(command.c_str());
+    }
+
+    //grep returns true if there is any line that matches the given pattern
+    //and returns false if no line matches the given pattern.
+    bool grep(std::string filepath, std::string pattern) {
+        std::string cmd = CommandConstants::grep;
+        std::string cmd_concat = cmd + pattern + " " + filepath;
+        int match = system(cmd_concat.c_str()); 
+        if (match == 0) {
+            return true;
+        }
+        return false;
     }
 
 

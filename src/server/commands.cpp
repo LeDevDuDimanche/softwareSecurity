@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 
 #include <server/commands.hpp>
 #include <server/pathvalidate.hpp>
@@ -6,12 +7,26 @@
 #include <server/parsing.hpp>
 #include <server/commandParsing.hpp>
 #include <server/conf.hpp>
+#include <server/fileFetching.hpp>
+#include <exception>
 
 namespace command
 {
     //Commands that do not require authentication
-    void ping(conn& conn) {
-        //TODO
+    void ping(conn& conn, std::string host) {
+        try {
+            std::string pingRetValue = SystemCommands::ping(host);
+            if (pingRetValue.empty()) {
+                std::string ret = "Ping: " + host + ": Name or service not known";
+                conn.send_message(ret);
+            }
+            else {
+                conn.send_message(pingRetValue);
+            }
+        }
+        catch(std::runtime_error e) {
+            conn.send_error(e.what());
+        }
     }
     void exit(conn& conn) {
         //TODO
@@ -105,7 +120,7 @@ namespace command
         }
         std::string currDir = conn.getCurrentDir("");
         std::string cmd = CommandConstants::ls;
-        std::string lsOutput = SystemCommands::ls(cmd, conn.getCurrentDir(""));
+        std::string lsOutput = SystemCommands::command_with_output(cmd, conn.getCurrentDir(""));
         conn.send_message(lsOutput);
     }
     //Modify directory command
@@ -131,7 +146,6 @@ namespace command
         catch(Parsing::BadPathException e) {
             conn.send_error(e.getDesc());
         }
-        std::cout <<"removing file as read " << std::endl;
         conn.removeFileAsRead(resolved);
     }
     void rm(conn& conn, std::string filename) {
@@ -168,10 +182,33 @@ namespace command
     }
     //Misc commands
     void date(conn& conn) {
+        bool isLoggedIn = conn.isLoggedIn();
+        if (!isLoggedIn) {
+            conn.send_error(AuthenticationMessages::mustBeLoggedIn);
+            return;
+        }
+        std::string cmd = CommandConstants::date;
+        //Pass in the empty string since date is not used on a directory
+        std::string dateOutput = SystemCommands::command_with_output(cmd, "");
+        std::cout << "date output " << dateOutput << std::endl;
+        conn.send_message(dateOutput);
 
     }
     void grep(conn& conn, std::string pattern) {
-        //TODO
+        std::string base = conn.getBase();
+        std::string currentDir = conn.getCurrentDir("");
+        std::string resolved = Parsing::resolve_path(base, currentDir, "");
+        std::vector<std::string> files = FileFetching::fetch_all_files_from_dir(resolved);
+        std::vector<std::string> candidateFiles;
+        for (std::string file: files) {
+            std::cout << "Found file: " << file << std::endl;
+            bool match = SystemCommands::grep(file, pattern);
+            if (match) {
+                candidateFiles.push_back(file);
+            }
+        }
+        std::string ret = Parsing::join_vector(candidateFiles, Parsing::new_line);
+        conn.send_message(ret);
     }
     void w(conn& conn) {
         bool isLoggedIn = conn.isLoggedIn();
@@ -231,10 +268,10 @@ namespace command
                 whoami(conn);
             }
             if (commandName == "date") {
-                ping(conn);
+                date(conn);
             }
             if (commandName == "ping") {
-                ping(conn);
+                ping(conn, splitBySpace[1]);
             } 
             if (commandName == "login") {
                 login(conn, splitBySpace[1]);

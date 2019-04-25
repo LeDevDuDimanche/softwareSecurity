@@ -71,7 +71,16 @@ void conn::send_message(std::string msg) {
 }
 std::string  conn::getCurrentDir(std::string filepath) {
     if (this->currentDir == "") {
+        if (filepath == "") {
+            return this->baseDir;
+        }
         return this->baseDir + Parsing::join_path + filepath;
+    }
+    if (filepath.empty() || filepath == "") {
+        if (this->currentDir == "") {
+            return this->baseDir;
+        }
+        return this->baseDir + Parsing::join_path + this->currentDir;
     }
     return (this->baseDir) + Parsing::join_path + (this->currentDir) + Parsing::join_path + filepath;
 }

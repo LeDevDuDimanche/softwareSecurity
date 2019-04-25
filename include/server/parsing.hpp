@@ -24,6 +24,7 @@ namespace Parsing
     const char slash = '/';
     const char space = ' ';
     const char delimiter = '\0';
+    const char new_line_char = '\n';
     //A constant to represent when go to parent directory
     const std::string parent_dir = "..";
     //A constant to represent this directory
