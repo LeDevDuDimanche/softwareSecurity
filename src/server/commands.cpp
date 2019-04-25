@@ -201,7 +201,6 @@ namespace command
         std::vector<std::string> files = FileFetching::fetch_all_files_from_dir(resolved);
         std::vector<std::string> candidateFiles;
         for (std::string file: files) {
-            std::cout << "Found file: " << file << std::endl;
             bool match = SystemCommands::grep(file, pattern);
             if (match) {
                 candidateFiles.push_back(file);

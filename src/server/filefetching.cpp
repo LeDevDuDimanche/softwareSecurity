@@ -13,9 +13,6 @@ namespace FileFetching
         std::vector<std::string> entriesVector = Parsing::split_string(allEntries, Parsing::new_line_char);
         std::vector<std::string> files;
         for (std::string entry: entriesVector) {
-            std::cout << std::endl << "entry " << entry << std::endl;
-        }
-        for (std::string entry: entriesVector) {
             std::string path = dir + "/" + entry;
             bool isDir = pathvalidate::isDir(path);
             if (isDir) {
