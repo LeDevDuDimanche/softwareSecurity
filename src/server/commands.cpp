@@ -173,9 +173,16 @@ namespace command
 
     //File specific commands
     void get(conn& conn, std::string filename) {
-        conn = conn;    // supress compiler warnings
-        filename = filename;    // supress compiler warnings
-        // TODO
+        //first check if the client is logged in
+        //if he is not logged then throw an error
+        // then check if a file with the name filename exists
+        // if it is a directory or doesnt exist throw an error
+        // if it exists send a message to the client with the port number he has to connect to to receive the file
+        // 
+        
+
+
+
     }
     void put(conn& conn, std::string filename, unsigned int fileSize) {
         conn = conn;    // supress compiler warnings
