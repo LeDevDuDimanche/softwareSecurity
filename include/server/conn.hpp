@@ -19,9 +19,15 @@ private:
     ActiveUserTable *activeUserTable;
     std::string user;
     int loginStatus;
+    long sock_fd;
+    char *output_buffer;
+    ssize_t written_in_buffer;
+    void send_to_socket(std::string to_send);
+
 public:
     std::string currentDir;
-    conn(std::string CurrentDir, std::string baseDir, UserReadTable *urt, FileDeleteTable *fd, ActiveUserTable *at);
+    conn(std::string CurrentDir, std::string baseDir, 
+        UserReadTable *urt, FileDeleteTable *fd, ActiveUserTable *at, long sock_fd);
     ~conn();
     std::string getBase();
     std::string getCurrentDir(std::string filepath);

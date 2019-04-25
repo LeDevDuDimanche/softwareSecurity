@@ -47,6 +47,24 @@ void print_usage(int argc, const char* argv[]) {
                  "[in_file out_file]\n";
 }
 
+struct printer_handler_params {
+    long sockfd;
+    std::ostream *output_stream_ptr;
+};
+
+void *printer_handler(void * params) {
+    printer_handler_params *handler_params = (printer_handler_params *) params;
+    int valread;
+    char buffer[SOCKET_BUFFER_SIZE] = {0}; 
+
+
+    while ((valread = read(handler_params->sockfd, buffer, SOCKET_BUFFER_SIZE)) > 0 && valread < SOCKET_BUFFER_SIZE) {
+        std::string input_copy = std::string(buffer, valread);  
+        (* (handler_params->output_stream_ptr)) << input_copy;
+    }
+    //TODO handle errors
+}
+
 int main(int argc, const char* argv[]) {
     if (argc != 3 && argc != 5) {
         print_usage(argc, argv);
@@ -69,7 +87,7 @@ int main(int argc, const char* argv[]) {
     }
     server_addr.sin_port = htons(port);
 
-    int sock = socket(AF_INET, SOCK_STREAM, 0);
+    long sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock == -1) {
         std::cerr << "Socket creation error\n";
         return EXIT_FAILURE;
@@ -101,9 +119,20 @@ int main(int argc, const char* argv[]) {
         in = &std::cin;
         out = &std::cout;
     }
+    pthread_t printer_thread;
 
-    //char buffer[SOCKET_BUFFER_SIZE] = {0};
-    //valread = read( sock , buffer, SOCKET_BUFFER_SIZE);
+    printer_handler_params handler_params = {
+        sock,
+        out
+    };
+
+    long ret_create; // TODO something with ret_create
+    //create the thread that reads from the socket and prints to stdout.
+     if ( (ret_create = pthread_create(&printer_thread, NULL, 
+             &printer_handler, (void *) &handler_params)) > 0) {
+                 std::cerr << "Could not create socket printer thread";
+                 return EXIT_FAILURE;
+    }
 
     std::string command;
     while (std::getline(*in, command)) {
@@ -111,8 +140,6 @@ int main(int argc, const char* argv[]) {
             std::cerr << "Couldn't send command to server\n";
             return EXIT_FAILURE;
         }
-        // TODO: get_reply();
-        *out << "answer " << command << "\n";
         // TODO:
         // Make sure to also handle the special cases of a get and put command
     }

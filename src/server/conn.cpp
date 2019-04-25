@@ -3,6 +3,9 @@
 #include <server/conn.hpp>
 #include <server/parsing.hpp>
 #include <server/conf.hpp>
+#include <sys/socket.h>
+ 
+#include <grass.hpp>
 
 //Calculates the location of the conf file 
 std::string getConfFilepath() {
@@ -10,14 +13,43 @@ std::string getConfFilepath() {
     return "./grass.conf";
 }
 
-conn::conn(std::string currentDir, std::string baseDir, UserReadTable *urt, FileDeleteTable *fd, ActiveUserTable *at)
+conn::conn(std::string currentDir, std::string baseDir, UserReadTable *urt,
+ FileDeleteTable *fd, ActiveUserTable *at, long sock_fd)
 {
     this->currentDir = currentDir;
     this->baseDir = baseDir;
     this->fileDeleteTable = fd;
     this->userReadTable = urt;
     this->loginStatus = -1;
-    this->activeUserTable = at;
+    this->activeUserTable = at; 
+    this->sock_fd = sock_fd;
+    this->output_buffer = (char *)malloc(SOCKET_BUFFER_SIZE);
+    this->written_in_buffer = 0;
+}
+
+void conn::send_to_socket(std::string to_send) { 
+    #define SOCKET_SEND \
+        if ((send_status = send(this->sock_fd, this->output_buffer, this->written_in_buffer, 0 /*flag*/)) != this->written_in_buffer) \
+        { \
+            std::stringstream ss; \
+            ss << "cannot send message to socket\n status:" << send_status << "\nmessage:" << to_send; \
+            server_failure(ss.str().c_str()); \
+        } \
+        this->written_in_buffer = this->written_in_buffer - send_status;
+
+
+    ssize_t send_status = -1;
+    for (char c: to_send) {
+        if (this->written_in_buffer == SOCKET_BUFFER_SIZE) { 
+            SOCKET_SEND
+        }
+        (this->output_buffer)[this->written_in_buffer] = c;
+        this->written_in_buffer += 1; 
+    }
+
+    if (this->written_in_buffer > 0) {
+        SOCKET_SEND
+    }
 }
 
 std::string conn::getBase() {
@@ -25,12 +57,17 @@ std::string conn::getBase() {
 }
 
 void conn::send_error(std::string err) {
-    std::cout <<"ERROR: " << err << std::endl;
+    std::string to_send = "ERROR: ";
+    to_send.append(err);
+    to_send.append("\n");
+    this->send_to_socket(to_send);
 }
 
-void conn::send_message(std::string msg) {
-    std::cout << "Successfully ran the command" << std::endl;
-    std::cout << msg << std::endl;
+void conn::send_message(std::string msg) {  
+    std::string to_send = "Successfully ran the command: ";
+    to_send.append(msg);
+    to_send.append("\n");
+    this->send_to_socket(to_send);
 }
 std::string  conn::getCurrentDir(std::string filepath) {
     if (this->currentDir == "") {
@@ -41,6 +78,7 @@ std::string  conn::getCurrentDir(std::string filepath) {
 
 conn::~conn()
 {
+    free(this->output_buffer);
 }
 
 bool conn::isBeingRead(std::string filename) {

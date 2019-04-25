@@ -144,7 +144,7 @@ def run_system_file_io(in_path, should_exit):
 
 
 def run_system_processes(client_args, should_exit, in_bytes=None):
-    """Run a client and server and return their `subprocess.CompletedProcess`.
+    """Run a client and server and return their respective output bytes.
 
     Raise a `subprocess.SubprocessError` on error."""
 
@@ -155,6 +155,7 @@ def run_system_processes(client_args, should_exit, in_bytes=None):
         with subprocess.Popen(str(SERVER_PATH), **kwargs) as server_process:
             time.sleep(STARTUP_WAIT)
             args = [str(CLIENT_PATH), *client_args]
+
             try:
                 client = subprocess.run(args, **kwargs, input=in_bytes,
                                         timeout=TIMEOUT, check=True)
@@ -168,7 +169,9 @@ def run_system_processes(client_args, should_exit, in_bytes=None):
                     message = "Client exited unexpectedly."
                     raise subprocess.SubprocessError(message)
                 client_output = client.stdout
-            server_process.kill()
+            finally:
+                server_process.kill()
+
             server_output, _ = server_process.communicate()
     except OSError as e:
         message = f"Couldn't run the subprocesses: {e}"
@@ -225,7 +228,8 @@ def get_regex_test(name, in_path, out_path, file_io=False,
 
     def test():
         # `should_exit` is True if the client should exit.
-        should_exit = EXIT in name
+        should_exit = EXIT in name    # TODO: this may be wrong, should the
+                                      # client already exit on EOF?
 
         try:
             out_pattern = out_path.read_bytes()
@@ -303,10 +307,11 @@ def main():
     finally:
         cleanup()
 
-    timing = time.perf_counter() - start
-    print(f"Took {timing:.2f} seconds to run {len(tests)} tests.")
-    print(f"Passed {num_passed} test{'s' if num_passed != 1 else ''} and "
-          f"failed {num_failed}.")
+    if num_passed > 0 or num_failed > 0:
+        timing = time.perf_counter() - start
+        print(f"Took {timing:.2f} seconds to run {len(tests)} tests.")
+        print(f"Passed {num_passed} test{'s' if num_passed != 1 else ''} and "
+              f"failed {num_failed}.")
 
 
 if __name__ == '__main__':

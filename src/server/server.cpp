@@ -33,12 +33,7 @@ static ActiveUserTable activeUserTable;
 
 static std::mutex client_handlers_mutex;
 static std::vector<pthread_t> client_handlers = {};
-
-// Helper function to run commands in unix.
-void run_command(const char* command, int sock){
-    std::vector<std::string> v = Parsing::split_string("bjorn", '/');
-}
-
+ 
 
 /*
  * Send a file to the client as its own thread
@@ -87,7 +82,7 @@ void *connection_handler(void* sockfd) {
     std::string read_str;
     int buffer_idx, end_last_copy;
  
-    conn thread_conn = conn("", basedir, &userReadTable, &fileDeleteTable, &activeUserTable);
+    conn thread_conn = conn("", basedir, &userReadTable, &fileDeleteTable, &activeUserTable, socket_id);
 
     //TODO change the condition that we end this loop to the fact that we process a CTRL+C character
     while ((valread = read(socket_id, buffer, SOCKET_BUFFER_SIZE)) > 0 && valread < SOCKET_BUFFER_SIZE)
@@ -116,18 +111,13 @@ void *connection_handler(void* sockfd) {
         }
 
         push_inside_to_process
-        
-        int nb_args_needed;
+          
         for (std::string command_line: processed_lines) { 
-            std::cout << "TODO remove this printf: command line to execute " << command_line << "\n";
             command::run_command(thread_conn, command_line);
-            //TODO flush what is the conn object to the client
+            std::cout << "Processed command : " << command_line;
         } 
         
-    }
-    snprintf(buffer, SOCKET_BUFFER_SIZE, "%s\n");
-    send(socket_id, HELLO_WORLD, sizeof HELLO_WORLD, 0);
-    printf("hello message sent\n");
+    } 
 
     pthread_exit(NULL/*a return value available to the thread doing join on this thread*/);
 
@@ -152,7 +142,7 @@ void search(char *pattern) {
 // Parse the rass.conf file
 // Listen to the port and handle each connection
 int main() {
-    int server_fd, new_socket;
+    int server_fd;
     //specifies a transport address and port for the Ipv4
     struct sockaddr_in address;
 
@@ -198,6 +188,8 @@ int main() {
     int ret_create = -1;
     pthread_t new_thread;
 
+
+    long new_socket;
     forever
     {
         printf("waiting for a connection on port %ld\n", server_port);

@@ -6,9 +6,9 @@
 
 
 namespace sockets {
-    bool send(std::string command, int sock) {
-        const char* buffer_ptr = command.c_str();
-        size_t bytes_left = command.length();
+    bool send(std::string message, int sock) {
+        const char* buffer_ptr = message.c_str();
+        size_t bytes_left = message.length();
         while (bytes_left > 0) {
             ssize_t bytes_sent = ::send(sock, buffer_ptr, bytes_left, 0);
             if (bytes_sent == -1) {
