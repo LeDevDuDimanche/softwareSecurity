@@ -6,6 +6,8 @@
 #include <vector>
 
 #include <cstdlib>
+
+#include <parsing.hpp>
 #include <cstring>
 
 #include <arpa/inet.h>
@@ -16,7 +18,13 @@
 
 #include <parsing.hpp>
 #include <sockets.hpp>
+#include <regex>
 
+
+
+static bool watching_for_port_number = false;
+
+#define SPACES "[ \t]*"
 
 /*
  * Send a file to the server as its own thread
@@ -55,19 +63,73 @@ struct printer_handler_params {
     std::ostream *output_stream_ptr;
 };
 
-void* printer_handler(void* params) {
-    printer_handler_params *handler_params = (printer_handler_params*) params;
-    int valread;
-    char buffer[SOCKET_BUFFER_SIZE] = {0};
+void *get_recv_handler(void *params) {
+
+}
 
 
-    while ((valread = read(handler_params->sockfd, buffer, SOCKET_BUFFER_SIZE)) > 0 && valread < SOCKET_BUFFER_SIZE) {
-        std::string input_copy = std::string(buffer, valread);
-        (* (handler_params->output_stream_ptr)) << input_copy;
+
+int create_socket(const char *server_ip, const char *server_port, long *ret_sock) {
+
+    struct sockaddr_in server_addr = {};
+    server_addr.sin_family = AF_INET;
+
+    if(inet_aton(server_ip, &(server_addr.sin_addr)) == 0) {
+        std::cerr << "Invalid address " << '"' << server_ip << '"' << "\n";
+        return EXIT_FAILURE;
     }
-    //TODO handle errors
 
-    return nullptr;
+    char* end;
+    long port = std::strtol(server_port, &end, 10);
+
+    if (errno != 0 || *end != '\0' || port <= 0 || port >= 0x10000) {
+        std::cerr << "Invalid port " << '"' << port << '"' << "\n";
+        return EXIT_FAILURE;
+    }
+    server_addr.sin_port = htons(port);
+
+    *ret_sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (*ret_sock == -1) {
+        std::cerr << "Socket creation error\n";
+        return EXIT_FAILURE;
+    }
+
+    struct sockaddr* connect_addr = (struct sockaddr*) &server_addr;
+    if (connect(*ret_sock, connect_addr, sizeof *connect_addr) != 0) {
+        std::cerr << "Couldn't connect to server\n";
+        return EXIT_FAILURE;
+    }
+
+    if (fcntl(*ret_sock, F_SETFL, O_NONBLOCK) == -1) {
+        std::cerr << "Error setting socket non-blocking\n";
+        return EXIT_FAILURE;
+    }
+
+    return EXIT_SUCCESS;
+
+}
+
+struct get_handler_args {
+    const char *server_ip;
+    const std::string *server_port;
+};
+
+void *get_handler(void *handler_args) { 
+    std::flush(std::cout);
+    get_handler_args *args = (get_handler_args *) handler_args; 
+    #define GET_HANDLER_DEFAULT_EXIT \
+        delete args->server_port; \
+        return NULL;
+    
+    long ret_socket;
+    if (create_socket(args->server_ip, (*(args->server_port)).c_str(), &ret_socket) == EXIT_FAILURE) {
+        std::cerr << "could not create socket in get handler of the client" << std::flush;
+        GET_HANDLER_DEFAULT_EXIT
+    }
+
+    
+
+    GET_HANDLER_DEFAULT_EXIT
 }
 
 int main(int argc, const char* argv[]) {
@@ -76,39 +138,20 @@ int main(int argc, const char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    struct sockaddr_in server_addr = {};
-    server_addr.sin_family = AF_INET;
 
-    if(inet_aton(argv[1], &(server_addr.sin_addr)) == 0) {
-        std::cerr << "Invalid address " << '"' << argv[1] << '"' << "\n";
+    const char *server_ip = argv[1];
+    const char *server_port = argv[2]; 
+    long sock;
+
+    if (create_socket(server_ip, server_port, &sock) == EXIT_FAILURE) {
         return EXIT_FAILURE;
     }
 
-    char* end;
-    long port = std::strtol(argv[2], &end, 10);
-    if (errno != 0 || *end != '\0' || port <= 0 || port >= 0x10000) {
-        std::cerr << "Invalid port " << '"' << argv[2] << '"' << "\n";
-        return EXIT_FAILURE;
-    }
-    server_addr.sin_port = htons(port);
 
-    int sock = socket(AF_INET, SOCK_STREAM, 0);
-    if (sock == -1) {
-        std::cerr << "Socket creation error\n";
-        return EXIT_FAILURE;
-    }
 
-    struct sockaddr* connect_addr = (struct sockaddr*) &server_addr;
-    if (connect(sock, connect_addr, sizeof *connect_addr) != 0) {
-        std::cerr << "Couldn't connect to server\n";
-        return EXIT_FAILURE;
-    }
 
-    if (fcntl(sock, F_SETFL, O_NONBLOCK) == -1) {
-        std::cerr << "Error setting socket non-blocking\n";
-        return EXIT_FAILURE;
-    }
-
+    //TODO close socket connection on every error (EXIT FAILURE). Have to do it on server_fault in server source code too.
+    // delete the printer thread too in case of error. 
     std::istream* in;
     std::ostream* out;
     std::ifstream in_file;
@@ -132,6 +175,7 @@ int main(int argc, const char* argv[]) {
         out = &std::cout;
     }
 
+    std::regex PORT_NUMBER_GET_REGEX (SPACES PORT_NUMBER_GET_KEYWORD SPACES "((\\d)+)" SPACES);
     std::string command;
     std::string response;
     while (std::getline(*in, command)) {
@@ -141,11 +185,20 @@ int main(int argc, const char* argv[]) {
         }
         std::string command_name = parts[0];
 
+
         try {
             sockets::send_all(command + '\n', sock);
         } catch (sockets::SocketError& e) {
             std::cerr << "Couldn't send command to server\n";
             return EXIT_FAILURE;
+        }
+
+        if (command_name == "get") {
+            watching_for_port_number = true;
+        }
+
+        if (command_name == "put") {
+            // TODO
         }
 
         try {
@@ -156,17 +209,37 @@ int main(int argc, const char* argv[]) {
         }
         *out << response << std::flush;
 
+        
+        if (watching_for_port_number) {
+            std::smatch port_matches;
+            if (std::regex_search(response, port_matches, PORT_NUMBER_GET_REGEX)) {
+                std::string *get_port_number = new std::string();
+                (*get_port_number).append(port_matches.str(1));
+                watching_for_port_number = false;
+                *out << "Found port number "<< *get_port_number << std::flush;
+
+                pthread_t get_thread;
+                long ret_create;
+
+                get_handler_args *args = new get_handler_args {
+                    server_ip, 
+                    get_port_number
+                };
+                if ((ret_create = pthread_create(&get_thread, NULL /*default attributes*/,
+                            get_handler, (void *) args))) {
+                    std::cerr << "cannot create thread for get command response handler\n";
+                    return EXIT_FAILURE;
+                }   
+            }
+        }
+
+
+
         if (command_name == "exit" && parts.size() == 1) {
             break;
         }
 
-        if (command_name == "get") {
-            // TODO
-        }
 
-        if (command_name == "put") {
-            // TODO
-        }
     }
 
     return EXIT_SUCCESS;

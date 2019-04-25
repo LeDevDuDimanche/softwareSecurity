@@ -22,7 +22,7 @@ namespace command
     void mkdir(conn& conn, std::string newDirName);
     void rm(conn& conn, std::string filename);
     //File specific commands
-    void get(conn& conn, std::string filename);
+    void get(conn *conn, std::string filename);
     void put(conn& conn, std::string filename, unsigned int fileSize);
     //Misc commands
     void date(conn& conn);
@@ -31,6 +31,6 @@ namespace command
     void whoami(conn& conn);
 
     // return true on exit
-    bool run_command(conn& conn, std::string commandLine);
+    bool run_command(conn* conn, std::string commandLine);
 }
 #endif

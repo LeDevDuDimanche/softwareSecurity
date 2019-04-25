@@ -44,7 +44,7 @@ void conn::send_error(std::string message) {
     this->send_message("Error: " + message);
 }
 
-void conn::send_message(std::string msg) {
+void conn::send_message(std::string msg) {  
     std::string to_send = msg;
     if (!to_send.empty() && to_send.back() != '\n') {
         to_send += '\n';
