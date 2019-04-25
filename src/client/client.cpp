@@ -48,21 +48,23 @@ void print_usage(int argc, const char* argv[]) {
 }
 
 struct printer_handler_params {
-    long sockfd;
+    int sockfd;
     std::ostream *output_stream_ptr;
 };
 
-void *printer_handler(void * params) {
-    printer_handler_params *handler_params = (printer_handler_params *) params;
+void* printer_handler(void* params) {
+    printer_handler_params *handler_params = (printer_handler_params*) params;
     int valread;
-    char buffer[SOCKET_BUFFER_SIZE] = {0}; 
+    char buffer[SOCKET_BUFFER_SIZE] = {0};
 
 
     while ((valread = read(handler_params->sockfd, buffer, SOCKET_BUFFER_SIZE)) > 0 && valread < SOCKET_BUFFER_SIZE) {
-        std::string input_copy = std::string(buffer, valread);  
+        std::string input_copy = std::string(buffer, valread);
         (* (handler_params->output_stream_ptr)) << input_copy;
     }
     //TODO handle errors
+
+    return nullptr;
 }
 
 int main(int argc, const char* argv[]) {
@@ -87,7 +89,7 @@ int main(int argc, const char* argv[]) {
     }
     server_addr.sin_port = htons(port);
 
-    long sock = socket(AF_INET, SOCK_STREAM, 0);
+    int sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock == -1) {
         std::cerr << "Socket creation error\n";
         return EXIT_FAILURE;
@@ -128,7 +130,7 @@ int main(int argc, const char* argv[]) {
 
     long ret_create; // TODO something with ret_create
     //create the thread that reads from the socket and prints to stdout.
-     if ( (ret_create = pthread_create(&printer_thread, NULL, 
+     if ( (ret_create = pthread_create(&printer_thread, NULL,
              &printer_handler, (void *) &handler_params)) > 0) {
                  std::cerr << "Could not create socket printer thread";
                  return EXIT_FAILURE;
@@ -140,6 +142,10 @@ int main(int argc, const char* argv[]) {
             std::cerr << "Couldn't send command to server\n";
             return EXIT_FAILURE;
         }
+        //if (!sockets::receive(sock, WAIT)) {
+        //    std::cerr << "Couldn't receive server response\n";
+            return EXIT_FAILURE;
+        //}
         // TODO:
         // Make sure to also handle the special cases of a get and put command
     }
