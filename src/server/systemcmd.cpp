@@ -6,25 +6,44 @@
 namespace SystemCommands
 {
 
-
-    std::string ls(std::string cmd, std::string dirname) {
-        const char *c_cmd = (cmd + dirname).c_str();
-        unsigned int buf_size = CommandConstants::buffer_size;
-        char buffer[buf_size];
-        std::string result = "";
-        FILE* pipe = popen(c_cmd, "r");
-        if (!pipe) throw std::runtime_error("popen() failed!");
-        try{
-            while(fgets(buffer, sizeof buffer, pipe) != NULL) {
-                result += buffer;
-            }
-        }
-        catch(...) {
-            pclose(pipe);
-        }
-        return result;
+    void clear(char *buffer) {
+	    for (int i = 0; i < 256;i++) {
+	    	buffer[i] = '\0'; 
+	    }
     }
 
+    std::string ls(std::string cmd, std::string dirname) {
+        char newLine = '\n';
+	    FILE *fpipe;
+        char c = 0;
+
+        if (0 == (fpipe = (FILE*)popen((cmd + " " + dirname).c_str(), "r")))
+        {
+            perror("popen() failed.");
+            exit(1);
+        }
+	    std::vector<std::string> lines;
+	    char buffer[256];
+	    int index = 0;
+        while (fread(&c, sizeof c, 1, fpipe))
+        {
+            //printf("%c", c);
+	    	buffer[index++] = c;
+	    	if (c == newLine) {
+	    		std::string temp{buffer};
+	    		lines.push_back(temp);
+	    		clear(buffer);
+	    		index = 0;
+
+	    	}
+        }
+	    for(std::string line: lines) {
+	    	std::cout << line;
+	    }
+        pclose(fpipe);
+        std::string retStr = Parsing::join_vector(lines, "");
+        return retStr;
+    }
     void mkdir(std::string cmd, std::string dirname) {
         bool exists = pathvalidate::exists(dirname);
         if (exists) {
