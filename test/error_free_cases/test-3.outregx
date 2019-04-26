@@ -1,0 +1,10 @@
+total[ ]0\n
+cd:[ ]dir1:[ ]No[ ]such[ ]file[ ]or[ ]directory\n
+total[ ]0\n
+total[ ]4\n
+drwxr-xr-x[ ]2[ ][^ \n]+[ ][^ \n]+[ ]4096​[ ]
+    [A-Z][a-z]{2}[ ][ \d]\d[ ]\d\d:\d\d[ ]dir2\n
+total[ ]0\n
+total[ ]4\n
+drwxr-xr-x[ ]2[ ][^ \n]+[ ][^ \n]+[ ]4096​[ ]
+    [A-Z][a-z]{2}[ ][ \d]\d[ ]\d\d:\d\d[ ]dir1\n

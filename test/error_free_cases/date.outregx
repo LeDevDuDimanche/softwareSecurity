@@ -1,2 +1,2 @@
 (.*\n)*    # any number of lines for answers to `login` and `pass`
-([A-Z][a-z]{2}[ ]){2}\d\d[ ]\d\d:\d\d:\d\d[ ][^ \n]{2,4}\d\d\d\d[ ]\n
+([A-Z][a-z]{2}[ ]){2}[ \d]\d[ ]\d\d:\d\d:\d\d[ ][^ \n]{2,5}[ ]\d\d\d\d[ ]\n

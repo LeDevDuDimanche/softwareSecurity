@@ -29,12 +29,13 @@ import time
 HERE = pathlib.Path(__file__).resolve().parent
 TEMP_DIR = HERE / 'temp'
 ERROR_FREE_DIR = HERE / 'error_free_cases'
+ERROR_DIR = HERE / 'error_cases'
 BIN_DIR = HERE.parent / 'bin'
 TEST_CONFIG = HERE / 'grass.conf'
 
 IN_PATTERN = '*.in'
 OUT_SUFFIX = '.outregx'
-EXIT = 'exit'
+ERROR_REGEX = re.compile(rb'^Error', re.MULTILINE)
 
 CLIENT = 'client'
 SERVER = 'server'
@@ -45,12 +46,13 @@ CONFIG_PATH = TEMP_DIR / 'grass.conf'
 IP_ADDRESS = '127.0.0.1'
 PORT = 2405
 
-ERROR_REGEX = re.compile(rb'^ERROR', re.MULTILINE)
-
 OUT_FILENAME = 'stdout.txt'
 OUT_FILE_PATH = TEMP_DIR / OUT_FILENAME
 STARTUP_WAIT = 0.01
 TIMEOUT = 0.75
+
+STDOUT_SUFFIX = '-stdout'
+FILE_IO_SUFFIX = '-file-io'
 
 RED = "\033[0;31m"
 GREEN = "\033[0;32m"
@@ -68,10 +70,23 @@ def get_tests():
 
     for in_path in error_free_cases:
         out_path = in_path.with_suffix(OUT_SUFFIX)
-        stdout_name = in_path.stem + "-stdout"
-        file_io_name = in_path.stem + "-file-io"
+        stdout_name = in_path.stem + STDOUT_SUFFIX
+        file_io_name = in_path.stem + FILE_IO_SUFFIX
         yield get_regex_test(stdout_name, in_path, out_path)
         yield get_regex_test(file_io_name, in_path, out_path, file_io=True)
+
+    error_cases = sorted(ERROR_DIR.glob(IN_PATTERN))
+    if not error_cases:
+        print("Error: couldn't find any 'error' test cases")
+
+    for in_path in error_cases:
+        out_path = in_path.with_suffix(OUT_SUFFIX)
+        stdout_name = in_path.stem + STDOUT_SUFFIX
+        file_io_name = in_path.stem + FILE_IO_SUFFIX
+        yield get_regex_test(stdout_name, in_path, out_path,
+                             may_trigger_errors=True)
+        yield get_regex_test(file_io_name, in_path, out_path, file_io=True,
+                             may_trigger_errors=True)
 
 
 def setup():
