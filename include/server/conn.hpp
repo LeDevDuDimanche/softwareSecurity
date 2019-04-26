@@ -6,7 +6,7 @@
 
 #include <server/FileDeleteTable.hpp>
 #include <server/UserReadTable.hpp>
-#include <server/ActiveUserTable.hpp> 
+#include <server/ActiveUserTable.hpp>
 
 std::string getConfFilepath();
 
@@ -22,11 +22,10 @@ private:
     long sock_fd;
     char *output_buffer;
     ssize_t written_in_buffer;
-    void send_to_socket(std::string to_send);
 
 public:
     std::string currentDir;
-    conn(std::string CurrentDir, std::string baseDir, 
+    conn(std::string CurrentDir, std::string baseDir,
         UserReadTable *urt, FileDeleteTable *fd, ActiveUserTable *at, long sock_fd);
     ~conn();
     std::string getBase();
@@ -50,6 +49,7 @@ public:
     void setUser(std::string user);
     void clearRead();
     void clearLogin();
+    void send_to_socket(std::string to_send);
     //setLogin updates the shared login table with the username
     void setLogin();
     std::string getAllLoggedInUsers();

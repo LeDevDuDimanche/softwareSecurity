@@ -198,8 +198,8 @@ namespace command
         std::string cmd = CommandConstants::date;
         //Pass in the empty string since date is not used on a directory
         std::string dateOutput = SystemCommands::command_with_output(cmd, "");
-        std::cout << "date output " << dateOutput << std::endl;
-        conn.send_message(dateOutput);
+        std::cout << "date output " << dateOutput << std::flush;
+        conn.send_to_socket(dateOutput);
 
     }
     void grep(conn& conn, std::string pattern) {
