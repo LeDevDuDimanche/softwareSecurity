@@ -6,6 +6,8 @@
 #include <vector>
 
 #include <cstdlib>
+
+#include <parsing.hpp>
 #include <cstring>
 
 #include <arpa/inet.h>
@@ -16,7 +18,15 @@
 
 #include <parsing.hpp>
 #include <sockets.hpp>
+#include <mutex>
+#include <regex>
 
+
+
+static std::mutex watching_for_port_number_mutex;
+static bool watching_for_port_number = false;
+
+#define SPACES "[ \t]*"
 
 /*
  * Send a file to the server as its own thread
@@ -55,19 +65,45 @@ struct printer_handler_params {
     std::ostream *output_stream_ptr;
 };
 
-void* printer_handler(void* params) {
-    printer_handler_params *handler_params = (printer_handler_params*) params;
-    int valread;
-    char buffer[SOCKET_BUFFER_SIZE] = {0};
+void *get_recv_handler(void *params) {
 
+}
+
+void *printer_handler(void * params) {
+    printer_handler_params *handler_params = (printer_handler_params *) params;
+    int valread;
+    char buffer[SOCKET_BUFFER_SIZE] = {0}; 
+    std::regex PORT_NUMBER_GET_REGEX (SPACES PORT_NUMBER_GET_KEYWORD SPACES "((\\d)+)" SPACES);
 
     while ((valread = read(handler_params->sockfd, buffer, SOCKET_BUFFER_SIZE)) > 0 && valread < SOCKET_BUFFER_SIZE) {
-        std::string input_copy = std::string(buffer, valread);
+        std::string input_copy = std::string(buffer, valread);  
+
+        //trying to parse the port number in case we sent a get command
+        watching_for_port_number_mutex.lock();
+        if (watching_for_port_number) { 
+            std::cout << "FOR DEBUGGING: watching for port number. Input copy: " << input_copy;
+            std::smatch port_matches;
+            if (std::regex_search(input_copy, port_matches, PORT_NUMBER_GET_REGEX)) {
+                long get_port_number = std::stol(port_matches.str(1));
+                watching_for_port_number = false;
+                //TODO create a thread that connects to the port number
+            }
+        }
+        watching_for_port_number_mutex.unlock();
+
         (* (handler_params->output_stream_ptr)) << input_copy;
     }
+
+    pthread_exit(0);
     //TODO handle errors
 
     return nullptr;
+}
+
+void watch_for_port_number() {
+    watching_for_port_number_mutex.lock();
+    watching_for_port_number = true;
+    watching_for_port_number_mutex.unlock();
 }
 
 int main(int argc, const char* argv[]) {
@@ -109,6 +145,8 @@ int main(int argc, const char* argv[]) {
         return EXIT_FAILURE;
     }
 
+    //TODO close socket connection on every error (EXIT FAILURE). Have to do it on server_fault in server source code too.
+    // delete the printer thread too in case of error. 
     std::istream* in;
     std::ostream* out;
     std::ifstream in_file;
@@ -161,11 +199,18 @@ int main(int argc, const char* argv[]) {
         }
 
         if (command_name == "get") {
-            // TODO
+            //signal printer thread it has to listen for information sent by the server
+                //about any thing that looks like PORT_NUMBER_GET \d+
+            watch_for_port_number();
         }
 
         if (command_name == "put") {
             // TODO
+        }
+
+        if (!sockets::send(command + '\n', sock)) {
+            std::cerr << "Couldn't send command to server\n";
+            return EXIT_FAILURE;
         }
     }
 

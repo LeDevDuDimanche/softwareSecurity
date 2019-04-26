@@ -11,6 +11,8 @@
 // #include <fcntl.h>
 // #include <stdbool.h>
 
+#define PORT_NUMBER_GET_KEYWORD "PORT_NUMBER_GET"
+
 #include <stdlib.h>
 #include <stdio.h>
 #define SOCKET_BUFFER_SIZE 1024 

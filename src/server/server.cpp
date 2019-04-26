@@ -6,6 +6,12 @@
 #include <ctype.h>
 #include <pthread.h>
 #include <netinet/in.h>
+#include <parsing.hpp>
+#include <server/conf.hpp>
+#include <vector>
+#include <mutex>
+#include <server/commands.hpp>
+#include <server/commandParsing.hpp>
 #include <unistd.h>
 
 #include <parsing.hpp>
@@ -18,7 +24,6 @@
 
 #define SOCKET_QUEUE_LENGTH 3
 #define forever for(;;)
-
 
 static std::string basedir;
 
@@ -146,36 +151,16 @@ int makeBaseDir(std::string baseDir) {
     return system(("mkdir -p " + baseDir).c_str());
 }
 
-
 // TODO:
 // Parse the rass.conf file
 // Listen to the port and handle each connection
 int main() {
     int server_fd;
-    //specifies a transport address and port for the Ipv4
-    struct sockaddr_in address;
-
-    int addrlen = sizeof(address);
-
-    //an int where we store options of the socket
-    int opt = 1;
-
-    //create a socket file descriptor for connections using the IPv4 for two way connections sending ybyte streams to each others (TCP).
-    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
-        server_failure("socket creation failed");
-    }
-
-    //setting use of the TCP. Also we are attaching socket to port PORT
-    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) {
-        server_failure("setsockopt");
-    }
-
-    address.sin_family = AF_INET;
-    address.sin_addr.s_addr = INADDR_ANY;
-
+ 
     std::string conf_path = getConfFilepath();
-    //change byte order according to make it match the big endian TCP/IP network byte order.
-
+    long server_port = getConfPort(conf_path);  
+    
+    
 
     long server_port = getConfPort(conf_path);
     basedir = getConfBaseDir(conf_path);
@@ -192,17 +177,30 @@ int main() {
     if (makeBaseDir(basedir) != 0) {
         server_failure("listen");
     }
+    
+    basedir = getConfBaseDir(conf_path);
+
 
     int ret_create = -1;
     pthread_t new_thread;
     long new_socket;
+
+    for_socket_accept accept_args;
+    try {
+        accept_args = bind_to_port(server_port, &server_fd);
+    } catch (const MySocketException e) {
+        server_failure(e.what());
+    }
+
     forever
     {
         printf("waiting for a connection on port %ld\n", server_port);
 
         //a blocking call
-        if ((new_socket = accept(server_fd, (struct sockaddr *)&address,
-                           (socklen_t*)&addrlen)) < 0) {
+        if ((new_socket = accept(server_fd, accept_args.address,
+                           accept_args.addrlen_ptr)) < 0)
+        {
+            close(new_socket);
             server_failure("accept");
         }
         printf("handling new connection\n");
@@ -213,11 +211,14 @@ int main() {
             #define FIRST_PART_ERROR_MSG "unable to create thread, thread creation error number: "
             size_t err_msg_max_len = (sizeof FIRST_PART_ERROR_MSG) + 30;
             char *err_msg_buffer = (char *)malloc(err_msg_max_len);
-            if (err_msg_buffer == NULL) {
+            if (err_msg_buffer == NULL)
+            {
+                close(new_socket);
                 server_failure("cannot allocate memory and cannot create a thread");
             }
 
             snprintf(err_msg_buffer, err_msg_max_len, FIRST_PART_ERROR_MSG " %d", ret_create);
+            close(new_socket);
             server_failure(err_msg_buffer);
         }
 

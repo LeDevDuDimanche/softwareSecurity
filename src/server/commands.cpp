@@ -9,6 +9,18 @@
 #include <server/conf.hpp>
 #include <server/fileFetching.hpp>
 #include <exception>
+#include <grass.hpp>
+#include <server/commandParsing.hpp>
+#include <server/conf.hpp>
+#define MIN_FREE_PORT 4000
+#define MAX_FREE_PORT 65535
+
+#include <socketsUtils.hpp>
+#include <mutex>
+
+static std::mutex unavailable_ports_mutex;
+static std::set<long> unavailable_ports = {};
+
 
 namespace command
 {
@@ -170,6 +182,73 @@ namespace command
         //The entry should have been deleted and is now removed from the synch data structure
         conn.removeFileAsDeleted(resolved);
     }
+    struct get_handler_args {
+        conn *conn_pointer;
+        std::string filename;
+    };
+
+
+    // doing most of the work to process the get command inside the thread
+    void *get_handler(void *uncast_params) {
+        get_handler_args* handler_params = (get_handler_args *) uncast_params;
+
+        conn *conn_pointer = handler_params->conn_pointer;
+        bool isLoggedIn = conn_pointer -> isLoggedIn();
+        if (!isLoggedIn) {
+            conn_pointer->send_error(AuthenticationMessages::mustBeLoggedIn);
+            return NULL;
+        }
+
+        std::string file_location = conn_pointer -> getCurrentDir(handler_params->filename);
+        if (!pathvalidate::isFile(file_location)) {
+            conn_pointer->send_error("this file doesn't exist");
+            return NULL;
+        }
+
+
+        long port = MIN_FREE_PORT; //arbitrary
+        for_socket_accept accept_args;
+        int server_fd;
+
+        for (; port < MAX_FREE_PORT; port++) {
+            unavailable_ports_mutex.lock();
+            bool already_used = unavailable_ports.find(port) != unavailable_ports.end();
+            unavailable_ports_mutex.unlock();
+            if (already_used) {
+                continue;
+            }
+            try {
+                accept_args = bind_to_port(port, &server_fd);
+            } catch (const MySocketException e) {
+                conn_pointer->send_error("unable to create a socket for the get command");
+                std::cerr << e.what() << std::endl;
+                return NULL;
+            }
+            break;
+        } 
+
+
+        long get_socket = -1; 
+        //we accept only one socket connection
+        if ((get_socket = accept(server_fd, accept_args.address,
+                        accept_args.addrlen_ptr)) < 0)
+        { 
+            std::cerr << "cannot accept connection socket for get with port" << port << std::endl;
+            conn_pointer->send_error("cannot open a socket for you to receive the file sorry");
+            pthread_exit(NULL);
+            close(server_fd);
+        }
+        //need to find a good port from a list of available ports.
+        std::string to_send = PORT_NUMBER_GET_KEYWORD;
+
+        conn_pointer->send_message(to_send.append(" 66666")); 
+
+/*
+        free port 
+        destroy thread 
+        remove port from recorded used ports*/
+        
+    }
 
     //File specific commands
     void get(conn& conn, std::string filename) {
@@ -178,12 +257,21 @@ namespace command
         // then check if a file with the name filename exists
         // if it is a directory or doesnt exist throw an error
         // if it exists send a message to the client with the port number he has to connect to to receive the file
-        // 
-        
+        //  
 
-
+        long ret_create;
+        pthread_t get_thread;
+        get_handler_args args = {
+            &conn,
+            filename
+        };
+        if ((ret_create = pthread_create(&get_thread, NULL /*default attributes*/,
+                    get_handler, (void *) &args))) {
+        }  
 
     }
+
+    
     void put(conn& conn, std::string filename, unsigned int fileSize) {
         conn = conn;    // supress compiler warnings
         filename = filename;    // supress compiler warnings
