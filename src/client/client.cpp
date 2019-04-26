@@ -109,15 +109,17 @@ int main(int argc, const char* argv[]) {
 
     std::istream* in;
     std::ostream* out;
+    std::ifstream in_file;
+    std::ofstream out_file;
     if (argc == 5) {
-        std::ifstream in_file(argv[3]);
+        in_file = std::ifstream(argv[3]);
         if (!in_file) {
             std::cerr << "Couldn't open in_file\n";
             return EXIT_FAILURE;
         }
         in = &in_file;
 
-        std::ofstream out_file(argv[4]);
+        out_file = std::ofstream(argv[4]);
         if (!out_file) {
             std::cerr << "Couldn't open out_file\n";
             return EXIT_FAILURE;
@@ -144,11 +146,12 @@ int main(int argc, const char* argv[]) {
             std::cerr << "Couldn't receive server response\n";
             return EXIT_FAILURE;
         }
-        *out << response;
+        *out << response << std::flush;
 
         // TODO: handle the special cases of a get and put command
     }
 
     // TODO: did we break successfully or was it a failure?
+    // TODO: close files properly
     return EXIT_SUCCESS;
 }

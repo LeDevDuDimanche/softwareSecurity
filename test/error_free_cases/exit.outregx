@@ -1,1 +1,1 @@
-(.+\n)*    # literally anything, as long as there's no ERROR
+(.*\n)*    # literally anything, as long as there's no ERROR

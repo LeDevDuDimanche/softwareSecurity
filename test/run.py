@@ -30,7 +30,7 @@ HERE = pathlib.Path(__file__).resolve().parent
 TEMP_DIR = HERE / 'temp'
 ERROR_FREE_DIR = HERE / 'error_free_cases'
 BIN_DIR = HERE.parent / 'bin'
-TEST_CONFIG = HERE / 'grass_test.conf'
+TEST_CONFIG = HERE / 'grass.conf'
 
 IN_PATTERN = '*.in'
 OUT_SUFFIX = '.outregx'
@@ -50,7 +50,7 @@ ERROR_REGEX = re.compile(rb'^ERROR', re.MULTILINE)
 OUT_FILENAME = 'stdout.txt'
 OUT_FILE_PATH = TEMP_DIR / OUT_FILENAME
 STARTUP_WAIT = 0.01
-TIMEOUT = 0.1
+TIMEOUT = 0.75
 
 RED = "\033[0;31m"
 GREEN = "\033[0;32m"
@@ -227,9 +227,9 @@ def get_regex_test(name, in_path, out_path, file_io=False,
     output should match the regular expression in the file at `out_path`."""
 
     def test():
-        # `should_exit` is True if the client should exit.
-        should_exit = EXIT in name    # TODO: this may be wrong, should the
-                                      # client already exit on EOF?
+        # `should_exit` is True if the client should exit.  Here, it's always
+        # True because we should exit on EOF.
+        should_exit = True
 
         try:
             out_pattern = out_path.read_bytes()
