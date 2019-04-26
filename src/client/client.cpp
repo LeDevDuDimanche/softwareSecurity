@@ -8,6 +8,7 @@
 #include <cstring>
 
 #include <arpa/inet.h>
+#include <fcntl.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -101,6 +102,11 @@ int main(int argc, const char* argv[]) {
         return EXIT_FAILURE;
     }
 
+    if (fcntl(sock, F_SETFL, O_NONBLOCK) == -1) {
+        std::cerr << "Error setting socket non-blocking\n";
+        return EXIT_FAILURE;
+    }
+
     std::istream* in;
     std::ostream* out;
     if (argc == 5) {
@@ -121,33 +127,26 @@ int main(int argc, const char* argv[]) {
         in = &std::cin;
         out = &std::cout;
     }
-    pthread_t printer_thread;
-
-    printer_handler_params handler_params = {
-        sock,
-        out
-    };
-
-    long ret_create; // TODO something with ret_create
-    //create the thread that reads from the socket and prints to stdout.
-     if ( (ret_create = pthread_create(&printer_thread, NULL,
-             &printer_handler, (void *) &handler_params)) > 0) {
-                 std::cerr << "Could not create socket printer thread";
-                 return EXIT_FAILURE;
-    }
 
     std::string command;
+    std::string response;
     while (std::getline(*in, command)) {
-        if (!sockets::send(command + '\n', sock)) {
+        try {
+            sockets::send(command + '\n', sock);
+        } catch (sockets::SocketError& e) {
             std::cerr << "Couldn't send command to server\n";
             return EXIT_FAILURE;
         }
-        //if (!sockets::receive(sock, WAIT)) {
-        //    std::cerr << "Couldn't receive server response\n";
+
+        try {
+            response = sockets::receive(sock);
+        } catch (sockets::SocketError& e) {
+            std::cerr << "Couldn't receive server response\n";
             return EXIT_FAILURE;
-        //}
-        // TODO:
-        // Make sure to also handle the special cases of a get and put command
+        }
+        *out << response;
+
+        // TODO: handle the special cases of a get and put command
     }
 
     // TODO: did we break successfully or was it a failure?
