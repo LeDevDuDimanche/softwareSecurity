@@ -64,10 +64,12 @@ def get_tests():
 
     yield test_hijack_exists
 
-    error_free_cases = sorted(ERROR_FREE_DIR.glob(IN_PATTERN))
+    error_free_cases = list(ERROR_FREE_DIR.glob(IN_PATTERN))
     if not error_free_cases:
         print("Error: couldn't find any 'error-free' test cases")
 
+    stems = {path: path.stem for path in error_free_cases}
+    error_free_cases.sort(key=stems.get)
     for in_path in error_free_cases:
         out_path = in_path.with_suffix(OUT_SUFFIX)
         stdout_name = in_path.stem + STDOUT_SUFFIX
@@ -75,10 +77,12 @@ def get_tests():
         yield get_regex_test(stdout_name, in_path, out_path)
         yield get_regex_test(file_io_name, in_path, out_path, file_io=True)
 
-    error_cases = sorted(ERROR_DIR.glob(IN_PATTERN))
+    error_cases = list(ERROR_DIR.glob(IN_PATTERN))
     if not error_cases:
         print("Error: couldn't find any 'error' test cases")
 
+    stems = {path: path.stem for path in error_cases}
+    error_cases.sort(key=stems.get)
     for in_path in error_cases:
         out_path = in_path.with_suffix(OUT_SUFFIX)
         stdout_name = in_path.stem + STDOUT_SUFFIX
