@@ -36,7 +36,7 @@ namespace Parsing
         }
         if (commandName == "ping") {
             return 1;
-        } 
+        }
         if (commandName == "login") {
             return 1;
         }
@@ -69,12 +69,12 @@ namespace Parsing
 
 
 
-    CommandArgumentsException::CommandArgumentsException(std::string name, unsigned int givenArguments) {
+    CommandArgumentsException::CommandArgumentsException(std::string name, size_t givenArguments) {
         this->commandName = name;
         this->argumentTotal = givenArguments;
     }
     std::string CommandArgumentsException::getDesc() {
-        unsigned int expectedArgumentTotal = commandNameToArgumentsFunc(this->commandName); 
+        unsigned int expectedArgumentTotal = commandNameToArgumentsFunc(this->commandName);
         std::stringstream ss1;
         std::stringstream ss2;
         ss1 << expectedArgumentTotal;
@@ -83,10 +83,10 @@ namespace Parsing
     }
 
     bool hasCommand(std::string command) {
-        int argumentTotal = commandNameToArgumentsFunc(command); 
-        return argumentTotal != -1; 
+        int argumentTotal = commandNameToArgumentsFunc(command);
+        return argumentTotal != -1;
     }
-    int getArgumentTotalForCommand(std::string command) { 
+    int getArgumentTotalForCommand(std::string command) {
         bool exists = hasCommand(command);
         if (!exists) {
             CommandNotFoundException e{command};
@@ -96,7 +96,7 @@ namespace Parsing
     }
     bool hasRightNumberOfArguments(std::vector<std::string> commandVector) {
         std::string commandName = commandVector[0];
-        int argumentTotal = getArgumentTotalForCommand(commandName);
+        size_t argumentTotal = getArgumentTotalForCommand(commandName);
         if (argumentTotal != commandVector.size() - 1) {
             CommandArgumentsException e{commandName, commandVector.size() - 1};
             throw e;

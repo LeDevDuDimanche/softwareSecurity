@@ -25,7 +25,7 @@ namespace Parsing
         std::string commandName;
         unsigned int argumentTotal;
     public:
-        CommandArgumentsException(std::string name, unsigned int givenArguments);
+        CommandArgumentsException(std::string name, size_t givenArguments);
         ~CommandArgumentsException();
         std::string getDesc();
     };

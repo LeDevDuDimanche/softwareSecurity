@@ -40,10 +40,10 @@ std::string getUniqueMatchValue(std::string filename, std::string keyword, int i
     std::vector<std::string> matches = getLinesThatStartWithKeyWord(keyword, filename);
     if (matches.size() != 1) {
         server_failure("wrong number of ports specification in configuration file");
-    } 
-    std::vector<std::string> matches_infos = 
+    }
+    std::vector<std::string> matches_infos =
         Parsing::split_string(matches.front(), Parsing::space);
-    if (info_idx < matches_infos.size()) {
+    if ((size_t) info_idx < matches_infos.size()) {
         return matches_infos[info_idx];
     } else {
         server_failure("out of bound argument requested from configuration file");
@@ -53,9 +53,9 @@ std::string getUniqueMatchValue(std::string filename, std::string keyword, int i
 std::string getConfBaseDir(std::string filename) {
     return getUniqueMatchValue(filename, "base", 1);
 }
- 
-long getConfPort(std::string filename) { 
-    std::string port_as_str = getUniqueMatchValue(filename, "port", 1); 
+
+long getConfPort(std::string filename) {
+    std::string port_as_str = getUniqueMatchValue(filename, "port", 1);
     return std::stol(port_as_str);
 
 }

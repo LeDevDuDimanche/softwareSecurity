@@ -9,7 +9,7 @@
 namespace pathvalidate
 {
     bool exists (const std::string& name) {
-        struct stat buffer;   
+        struct stat buffer;
         return (stat (name.c_str(), &buffer) == 0);
     }
 
@@ -26,6 +26,9 @@ namespace pathvalidate
     }
 
     bool valid_relative_to_base(std::string base, std::string newPath) {
+        base = base;    // supress compiler warnings
+        newPath = newPath;    // supress compiler warnings
+        // TODO
         return true;
     }
 

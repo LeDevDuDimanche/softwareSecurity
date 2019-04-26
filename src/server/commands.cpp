@@ -24,11 +24,12 @@ namespace command
                 conn.send_message(pingRetValue);
             }
         }
-        catch(std::runtime_error e) {
+        catch(std::runtime_error& e) {
             conn.send_error(e.what());
         }
     }
     void exit(conn& conn) {
+        conn = conn;    // supress compiler warnings
         //TODO
     }
     //Authentication commands
@@ -173,13 +174,20 @@ namespace command
         //The entry should have been deleted and is now removed from the synch data structure
         conn.removeFileAsDeleted(resolved);
     }
+
     //File specific commands
     void get(conn& conn, std::string filename) {
-
+        conn = conn;    // supress compiler warnings
+        filename = filename;    // supress compiler warnings
+        // TODO
     }
     void put(conn& conn, std::string filename, unsigned int fileSize) {
-
+        conn = conn;    // supress compiler warnings
+        filename = filename;    // supress compiler warnings
+        fileSize = fileSize;    // supress compiler warnings
+        // TODO
     }
+
     //Misc commands
     void date(conn& conn) {
         bool isLoggedIn = conn.isLoggedIn();
@@ -271,7 +279,7 @@ namespace command
             }
             if (commandName == "ping") {
                 ping(conn, splitBySpace[1]);
-            } 
+            }
             if (commandName == "login") {
                 login(conn, splitBySpace[1]);
             }

@@ -19,7 +19,7 @@ void UserReadTable::addFile(std::string filename, std::string user) {
     this->mtx.lock();
     std::vector<std::string> split_filename = Parsing::split_string(filename, Parsing::slash);
     size_t l = split_filename.size();
-    for (int i = 0; i < l;i++) {
+    for (size_t i = 0; i < l; i++) {
         std::string current_path = Parsing::join_vector(split_filename, Parsing::join_path);
         if (!hasKey(this->FilesBeingRead, current_path)) {
             std::set<std::string> s;
@@ -35,7 +35,7 @@ void UserReadTable::removeFile(std::string filename, std::string user) {
     this->mtx.lock();
     std::vector<std::string> split_filename = Parsing::split_string(filename, Parsing::slash);
     size_t l = split_filename.size();
-    for (int i = 0; i < l;i++) {
+    for (size_t i = 0; i < l;i++) {
         std::string current_path = Parsing::join_vector(split_filename, Parsing::join_path);
         if (!hasKey(this->FilesBeingRead, current_path)) {
             continue;
@@ -49,7 +49,7 @@ void UserReadTable::removeFile(std::string filename, std::string user) {
 bool UserReadTable::isBeingRead(std::string filename) {
     if (!hasKey(this->FilesBeingRead, filename)) {
         return false;
-    }   
-    std::set<std::string>  readers = this->FilesBeingRead[filename];
+    }
+    std::set<std::string> readers = this->FilesBeingRead[filename];
     return readers.find(filename) != readers.end();
 }

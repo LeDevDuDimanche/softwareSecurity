@@ -35,7 +35,7 @@ namespace sockets {
 
         std::string message = "";
         int wait = timeout;    // initial value
-        while (true) {
+        for (;;) {
             int pollVal = poll(pollFds, 1, wait);
 
             if (pollVal < 0) {
