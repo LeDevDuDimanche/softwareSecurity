@@ -4,10 +4,10 @@
 #include <server/parsing.hpp>
 #include <server/conf.hpp>
 #include <sys/socket.h>
- 
+
 #include <grass.hpp>
 
-//Calculates the location of the conf file 
+//Calculates the location of the conf file
 std::string getConfFilepath() {
     //Will update later with something that should be less hard code-y
     return "./grass.conf";
@@ -21,13 +21,13 @@ conn::conn(std::string currentDir, std::string baseDir, UserReadTable *urt,
     this->fileDeleteTable = fd;
     this->userReadTable = urt;
     this->loginStatus = -1;
-    this->activeUserTable = at; 
+    this->activeUserTable = at;
     this->sock_fd = sock_fd;
     this->output_buffer = (char *)malloc(SOCKET_BUFFER_SIZE);
     this->written_in_buffer = 0;
 }
 
-void conn::send_to_socket(std::string to_send) { 
+void conn::send_to_socket(std::string to_send) {
     #define SOCKET_SEND \
         if ((send_status = send(this->sock_fd, this->output_buffer, this->written_in_buffer, 0 /*flag*/)) != this->written_in_buffer) \
         { \
@@ -40,11 +40,11 @@ void conn::send_to_socket(std::string to_send) {
 
     ssize_t send_status = -1;
     for (char c: to_send) {
-        if (this->written_in_buffer == SOCKET_BUFFER_SIZE) { 
+        if (this->written_in_buffer == SOCKET_BUFFER_SIZE) {
             SOCKET_SEND
         }
         (this->output_buffer)[this->written_in_buffer] = c;
-        this->written_in_buffer += 1; 
+        this->written_in_buffer += 1;
     }
 
     if (this->written_in_buffer > 0) {
@@ -63,9 +63,8 @@ void conn::send_error(std::string err) {
     this->send_to_socket(to_send);
 }
 
-void conn::send_message(std::string msg) {  
-    std::string to_send = "Successfully ran the command: ";
-    to_send.append(msg);
+void conn::send_message(std::string msg) {
+    std::string to_send = msg;
     to_send.append("\n");
     this->send_to_socket(to_send);
 }
@@ -128,10 +127,10 @@ bool conn::isLoggedIn() {
 }
 
 void conn::setLoginStatus(int status) {
-    this->loginStatus = status; 
+    this->loginStatus = status;
 }
 
-void conn::setUser(std::string user) { 
+void conn::setUser(std::string user) {
         this->user = user;
 }
 
