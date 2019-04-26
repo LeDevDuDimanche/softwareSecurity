@@ -57,7 +57,7 @@ std::string conn::getBase() {
 }
 
 void conn::send_error(std::string err) {
-    std::string to_send = "ERROR: ";
+    std::string to_send = "Error: ";
     to_send.append(err);
     to_send.append("\n");
     this->send_to_socket(to_send);

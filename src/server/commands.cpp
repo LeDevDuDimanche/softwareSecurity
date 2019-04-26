@@ -17,11 +17,11 @@ namespace command
         try {
             std::string pingRetValue = SystemCommands::ping(host);
             if (pingRetValue.empty()) {
-                std::string ret = "Ping: " + host + ": Name or service not known";
+                std::string ret = "ping: " + host + ": Name or service not known";
                 conn.send_message(ret);
             }
             else {
-                conn.send_message(pingRetValue);
+                conn.send_to_socket(pingRetValue);
             }
         }
         catch(std::runtime_error& e) {
