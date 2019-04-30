@@ -28,10 +28,6 @@ namespace command
             conn.send_error(e.what());
         }
     }
-    void exit(conn& conn) {
-        conn = conn;    // supress compiler warnings
-        //TODO
-    }
     //Authentication commands
     void login(conn& conn, std::string username) {
         std::string confPath = getConfFilepath();
@@ -235,32 +231,33 @@ namespace command
         conn.send_message(conn.getUser());
     }
 
-    void run_command(conn& conn, std::string commandLine) {
+    // return true on exit
+    bool run_command(conn& conn, std::string commandLine) {
         try {
             std::vector<std::string> splitBySpace = Parsing::split_string(commandLine, Parsing::space);
             if (splitBySpace.empty()) {
                 conn.send_error("Could not parse the command");
-                return;
+                return false;
             }
             std::string commandName = splitBySpace[0];
             bool hasRightArguments = Parsing::hasRightNumberOfArguments(splitBySpace);
             if (!hasRightArguments) {
                 conn.send_error("Not the right argument total");
-                return;
+                return false;
             }
             if (commandName == "rm") {
                 rm(conn, splitBySpace[1]);
             }
             if (commandName == "cd") {
                 cd(conn, splitBySpace[1]);
-                return;
+                return false;
             }
             if (commandName == "ls") {
                 ls(conn);
             }
             if (commandName == "mkdir") {
                 mkdir(conn, splitBySpace[1]);
-                return;
+                return false;
             }
             if (commandName == "get") {
                 get(conn, splitBySpace[1]);
@@ -287,7 +284,7 @@ namespace command
                 pass(conn, splitBySpace[1]);
             }
             if (commandName == "exit") {
-                exit(conn);
+                return true;
             }
             if (commandName == "logout") {
                 logout(conn);
@@ -302,5 +299,7 @@ namespace command
         catch(Parsing::CommandNotFoundException e) {
             conn.send_error(e.getDesc());
         }
+
+        return false;
     }
 } // command

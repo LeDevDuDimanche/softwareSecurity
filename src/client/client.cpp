@@ -3,6 +3,7 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <vector>
 
 #include <cstdlib>
 #include <cstring>
@@ -13,6 +14,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include <parsing.hpp>
 #include <sockets.hpp>
 
 
@@ -133,6 +135,12 @@ int main(int argc, const char* argv[]) {
     std::string command;
     std::string response;
     while (std::getline(*in, command)) {
+        std::vector<std::string> parts = Parsing::split_string(command, ' ');
+        if (parts.size() == 0) {
+            continue;
+        }
+        std::string command_name = parts[0];
+
         try {
             sockets::send(command + '\n', sock);
         } catch (sockets::SocketError& e) {
@@ -148,10 +156,18 @@ int main(int argc, const char* argv[]) {
         }
         *out << response << std::flush;
 
-        // TODO: handle the special cases of a get and put command
+        if (command_name == "exit" && parts.size() == 1) {
+            break;
+        }
+
+        if (command_name == "get") {
+            // TODO
+        }
+
+        if (command_name == "put") {
+            // TODO
+        }
     }
 
-    // TODO: did we break successfully or was it a failure?
-    // TODO: close files properly
     return EXIT_SUCCESS;
 }

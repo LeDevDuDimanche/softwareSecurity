@@ -81,6 +81,7 @@ void *connection_handler(void* sockfd) {
 
     conn thread_conn = conn("", basedir, &userReadTable, &fileDeleteTable, &activeUserTable, socket_id);
 
+    bool exit = false;
     //TODO change the condition that we end this loop to the fact that we process a CTRL+C character
     while ((valread = read(socket_id, buffer, SOCKET_BUFFER_SIZE)) > 0 && valread < SOCKET_BUFFER_SIZE)
     {
@@ -110,13 +111,20 @@ void *connection_handler(void* sockfd) {
         push_inside_to_process
 
         for (std::string command_line: processed_lines) {
-            command::run_command(thread_conn, command_line);
-            std::cout << "Processed command : " << command_line;
+            exit = command::run_command(thread_conn, command_line);
+            std::cout << "Processed command : " << command_line << '\n';
+            if (exit) {
+                break;
+            }
         }
 
+        if (exit) {
+            break;
+        }
     }
 
-    pthread_exit(NULL/*a return value available to the thread doing join on this thread*/);
+    std::cout << "Exiting thread\n";
+    pthread_exit(NULL);
 
 }
 
