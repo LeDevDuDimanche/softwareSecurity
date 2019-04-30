@@ -1,2 +1,4 @@
 login user1
 exit
+kthxbye
+# The command `kthxbye` doesn't exits and will result in an error if `exit` doesn't exit.

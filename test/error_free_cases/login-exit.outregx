@@ -1,1 +1,2 @@
 (.*\n)*    # literally anything, as long as there's no Error
+# The command `kthxbye` doesn't exits and will result in an error if `exit` doesn't exit.
