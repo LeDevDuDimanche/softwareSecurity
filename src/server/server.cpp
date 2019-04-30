@@ -1,8 +1,10 @@
 #include <grass.hpp>
+
+#include <mutex>
+#include <vector>
+
 #include <ctype.h>
 #include <pthread.h>
-#include <vector>
-#include <mutex>
 #include <netinet/in.h>
 #include <unistd.h>
 
@@ -140,6 +142,10 @@ void search(char *pattern) {
     // TODO
 }
 
+int makeBaseDir(std::string baseDir) {
+    return system(("mkdir -p " + baseDir).c_str());
+}
+
 
 // TODO:
 // Parse the rass.conf file
@@ -155,14 +161,12 @@ int main() {
     int opt = 1;
 
     //create a socket file descriptor for connections using the IPv4 for two way connections sending ybyte streams to each others (TCP).
-    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
-    {
+    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
         server_failure("socket creation failed");
     }
 
     //setting use of the TCP. Also we are attaching socket to port PORT
-    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)))
-    {
+    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) {
         server_failure("setsockopt");
     }
 
@@ -175,22 +179,22 @@ int main() {
 
     long server_port = getConfPort(conf_path);
     basedir = getConfBaseDir(conf_path);
-    address.sin_port = htons( server_port );
+    address.sin_port = htons(server_port);
 
-    if (bind(server_fd, (struct sockaddr*) &address, sizeof(address)) < 0)
-    {
+    if (bind(server_fd, (struct sockaddr*) &address, sizeof(address)) < 0) {
         server_failure("bind failed");
     }
 
-    if (listen(server_fd, SOCKET_QUEUE_LENGTH) < 0)
-    {
+    if (listen(server_fd, SOCKET_QUEUE_LENGTH) < 0) {
+        server_failure("listen");
+    }
+
+    if (makeBaseDir(basedir) != 0) {
         server_failure("listen");
     }
 
     int ret_create = -1;
     pthread_t new_thread;
-
-
     long new_socket;
     forever
     {
@@ -198,21 +202,18 @@ int main() {
 
         //a blocking call
         if ((new_socket = accept(server_fd, (struct sockaddr *)&address,
-                           (socklen_t*)&addrlen)) < 0)
-        {
+                           (socklen_t*)&addrlen)) < 0) {
             server_failure("accept");
         }
         printf("handling new connection\n");
 
         if ((ret_create = pthread_create(&new_thread, NULL /*default attributes*/,
-             connection_handler, (void *) new_socket)))
-        {
+             connection_handler, (void *) new_socket))) {
 
             #define FIRST_PART_ERROR_MSG "unable to create thread, thread creation error number: "
             size_t err_msg_max_len = (sizeof FIRST_PART_ERROR_MSG) + 30;
             char *err_msg_buffer = (char *)malloc(err_msg_max_len);
-            if (err_msg_buffer == NULL)
-            {
+            if (err_msg_buffer == NULL) {
                 server_failure("cannot allocate memory and cannot create a thread");
             }
 

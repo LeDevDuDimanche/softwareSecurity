@@ -43,6 +43,7 @@ BINARIES = CLIENT, SERVER
 CLIENT_PATH = TEMP_DIR / CLIENT
 SERVER_PATH = TEMP_DIR / SERVER
 CONFIG_PATH = TEMP_DIR / 'grass.conf'
+REPO_DIR = TEMP_DIR / 'repo'
 IP_ADDRESS = '127.0.0.1'
 PORT = 2405
 
@@ -171,7 +172,13 @@ def run_system_processes(client_args, should_exit, in_bytes=None):
                   cwd=TEMP_DIR)
 
     try:
-        with subprocess.Popen(str(SERVER_PATH), **kwargs) as server_process:
+        server_process = subprocess.Popen(str(SERVER_PATH), **kwargs)
+    except OSError as e:
+        message = f"Couldn't run the subprocesses: {e}"
+        raise subprocess.SubprocessError(message) from None
+
+    with server_process:
+        try:
             time.sleep(STARTUP_WAIT)
             args = [str(CLIENT_PATH), *client_args]
 
@@ -188,13 +195,15 @@ def run_system_processes(client_args, should_exit, in_bytes=None):
                     message = "Client exited unexpectedly."
                     raise subprocess.SubprocessError(message)
                 client_output = client.stdout
-            finally:
-                server_process.kill()
+        finally:
+            server_process.kill()
+            try:
+                shutil.rmtree(REPO_DIR)
+            except OSError as e:
+                print("Warning regarding the cleanup of the next test: "
+                      f"Couldn't remove repo: {e}")
 
-            server_output, _ = server_process.communicate()
-    except OSError as e:
-        message = f"Couldn't run the subprocesses: {e}"
-        raise subprocess.SubprocessError(message) from None
+        server_output, _ = server_process.communicate()
 
     return client_output, server_output
 
