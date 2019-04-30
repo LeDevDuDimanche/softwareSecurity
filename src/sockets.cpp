@@ -23,11 +23,11 @@ namespace sockets {
         }
     }
 
-    std::string receive(int sock) {
-        return receive(sock, defaultTimeout, defaultWait);
+    std::string receive_all(int sock) {
+        return receive_all(sock, defaultTimeout, defaultWait);
     }
 
-    std::string receive(int sock, int timeout, int waitBetween) {
+    std::string receive_all(int sock, int timeout, int waitBetween) {
         char buffer[4096];
         struct pollfd pollFds[1];
         pollFds[0].fd = sock;

@@ -1,15 +1,15 @@
 #include <grass.hpp>
 #include <ctype.h>
-#include <server/parsing.hpp>
-#include <server/conf.hpp>
 #include <pthread.h>
 #include <vector>
 #include <mutex>
 #include <netinet/in.h>
-#include <server/commands.hpp>
-#include <server/commandParsing.hpp>
 #include <unistd.h>
 
+#include <parsing.hpp>
+#include <server/commands.hpp>
+#include <server/commandParsing.hpp>
+#include <server/conf.hpp>
 #include <server/FileDeleteTable.hpp>
 #include <server/ActiveUserTable.hpp>
 #include <server/UserReadTable.hpp>
@@ -169,8 +169,7 @@ int main() {
     basedir = getConfBaseDir(conf_path);
     address.sin_port = htons( server_port );
 
-   if (bind(server_fd, (struct sockaddr *)&address,
-                                 sizeof(address))<0)
+    if (bind(server_fd, (struct sockaddr*) &address, sizeof(address)) < 0)
     {
         server_failure("bind failed");
     }
@@ -216,8 +215,6 @@ int main() {
         client_handlers_mutex.lock();
         client_handlers.push_back(new_thread);
         client_handlers_mutex.unlock();
-
-
     }
 
     //should we clean up when a kill signal is received by this app like CTRL+C?

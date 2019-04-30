@@ -1,5 +1,5 @@
 #include <server/ActiveUserTable.hpp>
-#include <server/parsing.hpp>
+#include <parsing.hpp>
 #include <set>
 #include <mutex>
 #include <string>
@@ -32,6 +32,6 @@ std::string ActiveUserTable::getAllLoggedInUsers() {
     for (std::string username: this->currentUsers) {
         v.push_back(username);
     }
-    std::string temp = Parsing::join_vector(v, Parsing::new_line); 
+    std::string temp = Parsing::join_vector(v, Parsing::new_line);
     return temp;
 }

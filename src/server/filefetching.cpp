@@ -3,7 +3,7 @@
 #include <server/pathvalidate.hpp>
 #include <server/systemcmd.hpp>
 #include <server/fileFetching.hpp>
-#include <server/parsing.hpp>
+#include <parsing.hpp>
 
 namespace FileFetching
 {

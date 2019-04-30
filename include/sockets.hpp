@@ -10,8 +10,8 @@ namespace sockets {
     void send(std::string command, int sock);
 
     // Try to receive the whole message.
-    std::string receive(int sock);
-    std::string receive(int sock, int timeout, int waitBetween);
+    std::string receive_all(int sock);
+    std::string receive_all(int sock, int timeout, int waitBetween);
 
     class SocketError: public virtual std::runtime_error {
         using std::runtime_error::runtime_error;

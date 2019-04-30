@@ -2,8 +2,9 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+
 #include <grass.hpp>
-#include <server/parsing.hpp>
+#include <parsing.hpp>
 
 
 std::vector<std::string> getLinesThatStartWithKeyWord(std::string keyword, std::string filename) {

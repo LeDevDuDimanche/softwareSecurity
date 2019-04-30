@@ -141,7 +141,7 @@ int main(int argc, const char* argv[]) {
         }
 
         try {
-            response = sockets::receive(sock);
+            response = sockets::receive_all(sock);
         } catch (sockets::SocketError& e) {
             std::cerr << "Couldn't receive server response\n";
             return EXIT_FAILURE;

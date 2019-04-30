@@ -1,6 +1,6 @@
 #include <server/systemcmd.hpp>
 #include <server/pathvalidate.hpp>
-#include <server/parsing.hpp>
+#include <parsing.hpp>
 #include <chrono>
 #include <thread>
 #include <mutex>
@@ -13,7 +13,7 @@ namespace SystemCommands
 
     void clear(char *buffer) {
 	    for (int i = 0; i < 256;i++) {
-	    	buffer[i] = '\0'; 
+	    	buffer[i] = '\0';
 	    }
     }
     std::string ping(std::string host) {
@@ -24,14 +24,14 @@ namespace SystemCommands
         std::string pingRetValue;
         std::thread t([&cv, &pingRetValue, &host]()
         {
-            pingRetValue = command_with_output(CommandConstants::ping, host); 
+            pingRetValue = command_with_output(CommandConstants::ping, host);
             cv.notify_one();
         });
 
         t.detach();
         {
             std::unique_lock<std::mutex> l(m);
-            if(cv.wait_for(l, 5*sec) == std::cv_status::timeout) 
+            if(cv.wait_for(l, 5*sec) == std::cv_status::timeout)
                 throw std::runtime_error("Host did not respond");
         }
         return pingRetValue;
@@ -100,7 +100,7 @@ namespace SystemCommands
     bool grep(std::string filepath, std::string pattern) {
         std::string cmd = CommandConstants::grep;
         std::string cmd_concat = cmd + pattern + " " + filepath;
-        int match = system(cmd_concat.c_str()); 
+        int match = system(cmd_concat.c_str());
         if (match == 0) {
             return true;
         }

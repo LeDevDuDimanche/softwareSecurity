@@ -4,7 +4,7 @@
 #include <server/commands.hpp>
 #include <server/pathvalidate.hpp>
 #include <server/systemcmd.hpp>
-#include <server/parsing.hpp>
+#include <parsing.hpp>
 #include <server/commandParsing.hpp>
 #include <server/conf.hpp>
 #include <server/fileFetching.hpp>
