@@ -18,12 +18,10 @@
 
 #include <parsing.hpp>
 #include <sockets.hpp>
-#include <mutex>
 #include <regex>
 
 
 
-static std::mutex watching_for_port_number_mutex;
 static bool watching_for_port_number = false;
 
 #define SPACES "[ \t]*"
@@ -69,42 +67,7 @@ void *get_recv_handler(void *params) {
 
 }
 
-void *printer_handler(void * params) {
-    printer_handler_params *handler_params = (printer_handler_params *) params;
-    int valread;
-    char buffer[SOCKET_BUFFER_SIZE] = {0}; 
-    std::regex PORT_NUMBER_GET_REGEX (SPACES PORT_NUMBER_GET_KEYWORD SPACES "((\\d)+)" SPACES);
 
-    while ((valread = read(handler_params->sockfd, buffer, SOCKET_BUFFER_SIZE)) > 0 && valread < SOCKET_BUFFER_SIZE) {
-        std::string input_copy = std::string(buffer, valread);  
-
-        //trying to parse the port number in case we sent a get command
-        watching_for_port_number_mutex.lock();
-        if (watching_for_port_number) { 
-            std::cout << "FOR DEBUGGING: watching for port number. Input copy: " << input_copy;
-            std::smatch port_matches;
-            if (std::regex_search(input_copy, port_matches, PORT_NUMBER_GET_REGEX)) {
-                long get_port_number = std::stol(port_matches.str(1));
-                watching_for_port_number = false;
-                //TODO create a thread that connects to the port number
-            }
-        }
-        watching_for_port_number_mutex.unlock();
-
-        (* (handler_params->output_stream_ptr)) << input_copy;
-    }
-
-    pthread_exit(0);
-    //TODO handle errors
-
-    return nullptr;
-}
-
-void watch_for_port_number() {
-    watching_for_port_number_mutex.lock();
-    watching_for_port_number = true;
-    watching_for_port_number_mutex.unlock();
-}
 
 int main(int argc, const char* argv[]) {
     if (argc != 3 && argc != 5) {
@@ -170,6 +133,7 @@ int main(int argc, const char* argv[]) {
         out = &std::cout;
     }
 
+    std::regex PORT_NUMBER_GET_REGEX (SPACES PORT_NUMBER_GET_KEYWORD SPACES "((\\d)+)" SPACES);
     std::string command;
     std::string response;
     while (std::getline(*in, command)) {
@@ -179,12 +143,6 @@ int main(int argc, const char* argv[]) {
         }
         std::string command_name = parts[0];
 
-        try {
-            sockets::send(command + '\n', sock);
-        } catch (sockets::SocketError& e) {
-            std::cerr << "Couldn't send command to server\n";
-            return EXIT_FAILURE;
-        }
 
         try {
             response = sockets::receive_all(sock);
@@ -194,21 +152,36 @@ int main(int argc, const char* argv[]) {
         }
         *out << response << std::flush;
 
+        if (watching_for_port_number) {
+            std::smatch port_matches;
+            if (std::regex_search(response, port_matches, PORT_NUMBER_GET_REGEX)) {
+                long get_port_number = std::stol(port_matches.str(1));
+                watching_for_port_number = false;
+                *out << "Found port number "<<get_port_number << std::flush;
+                //TODO create a thread that connects to the port number
+            }
+        }
+
+
+
         if (command_name == "exit" && parts.size() == 1) {
             break;
         }
 
         if (command_name == "get") {
-            //signal printer thread it has to listen for information sent by the server
-                //about any thing that looks like PORT_NUMBER_GET \d+
-            watch_for_port_number();
+            watching_for_port_number = true;
         }
 
         if (command_name == "put") {
             // TODO
         }
 
-        sockets::send(command + '\n', sock);
+        try {
+            sockets::send(command + '\n', sock);
+        } catch (sockets::SocketError& e) {
+            std::cerr << "Couldn't send command to server\n";
+            return EXIT_FAILURE;
+        }
     }
 
     return EXIT_SUCCESS;

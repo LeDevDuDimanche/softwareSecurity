@@ -64,8 +64,7 @@ void conn::send_error(std::string err) {
 }
 
 void conn::send_message(std::string msg) {  
-    std::string to_send = "";
-    to_send.append(msg);
+    std::string to_send = msg;
     to_send.append("\n");
     this->send_to_socket(to_send);
 }
