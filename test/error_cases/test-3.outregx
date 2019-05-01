@@ -1,5 +1,5 @@
 total[ ]0\n
-cd:[ ]dir1:[ ]No[ ]such[ ]file[ ]or[ ]directory\n
+.*\n    # no such file or directory
 total[ ]0\n
 total[ ]4\n
 drwxr-xr-x[ ]2[ ][^ \n]+[ ][^ \n]+[ ]4096[ ]

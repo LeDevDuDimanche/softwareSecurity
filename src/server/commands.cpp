@@ -38,7 +38,7 @@ namespace command
         }
         conn.setUser(username);
         conn.setLoginStatus(AuthenticationMessages::authenticatingStatus);
-        conn.send_message("Almost logged in send your password\n");
+        // TODO conn.send_message(empty);
     }
     void pass(conn& conn, std::string pw) {
         std::string confPath = getConfFilepath();
@@ -58,6 +58,7 @@ namespace command
         //The authentication was sucessful if we make it this far.
         conn.setLoginStatus(AuthenticationMessages::loggedIn);
         conn.setLogin();
+        // TODO conn.send_message(empty);
     }
     void logout(conn& conn) {
         bool isLoggedIn = conn.isLoggedIn();
@@ -68,7 +69,7 @@ namespace command
         conn.clearRead();
         conn.clearLogin();
         conn.currentDir = "";
-        conn.send_message(AuthenticationMessages::logutMessage);
+        //conn.send_message(AuthenticationMessages::logutMessage);
     }
     //Directory traversal commands
     void cd(conn& conn, std::string dir) {
@@ -94,7 +95,7 @@ namespace command
                 conn.removeFileAsRead(oldCurrentDir);
                 conn.addFileAsRead(relativePath);
                 conn.currentDir = relativePath;
-                conn.send_message(relativePath);
+                //conn.send_message(relativePath);
             }
             else {
                 if (pathvalidate::exists(newPath)) {
