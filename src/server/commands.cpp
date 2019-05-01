@@ -119,7 +119,7 @@ namespace command
         std::string currDir = conn.getCurrentDir("");
         std::string cmd = CommandConstants::ls;
         std::string lsOutput = SystemCommands::command_with_output(cmd, conn.getCurrentDir(""));
-        conn.send_message(lsOutput);
+        conn.send_to_socket(lsOutput);
     }
     //Modify directory command
     void mkdir(conn& conn, std::string newDirName) {

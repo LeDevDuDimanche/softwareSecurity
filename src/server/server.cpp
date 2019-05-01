@@ -114,7 +114,7 @@ void *connection_handler(void* sockfd) {
 
         for (std::string command_line: processed_lines) {
             exit = command::run_command(thread_conn, command_line);
-            std::cout << "Processed command : " << command_line << '\n';
+            std::cout << "Processed command: " << command_line << '\n';
             if (exit) {
                 break;
             }
