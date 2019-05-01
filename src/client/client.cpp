@@ -208,10 +208,7 @@ int main(int argc, const char* argv[]) {
             // TODO
         }
 
-        if (!sockets::send(command + '\n', sock)) {
-            std::cerr << "Couldn't send command to server\n";
-            return EXIT_FAILURE;
-        }
+        sockets::send(command + '\n', sock);
     }
 
     return EXIT_SUCCESS;

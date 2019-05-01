@@ -13,6 +13,7 @@
 #include <server/commands.hpp>
 #include <server/commandParsing.hpp>
 #include <unistd.h>
+#include <socketsUtils.hpp>
 
 #include <parsing.hpp>
 #include <server/commands.hpp>
@@ -158,21 +159,10 @@ int main() {
     int server_fd;
  
     std::string conf_path = getConfFilepath();
-    long server_port = getConfPort(conf_path);  
-    
     
 
     long server_port = getConfPort(conf_path);
     basedir = getConfBaseDir(conf_path);
-    address.sin_port = htons(server_port);
-
-    if (bind(server_fd, (struct sockaddr*) &address, sizeof(address)) < 0) {
-        server_failure("bind failed");
-    }
-
-    if (listen(server_fd, SOCKET_QUEUE_LENGTH) < 0) {
-        server_failure("listen");
-    }
 
     if (makeBaseDir(basedir) != 0) {
         server_failure("listen");
