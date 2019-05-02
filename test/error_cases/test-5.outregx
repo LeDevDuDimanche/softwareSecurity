@@ -1,6 +1,6 @@
 Error.+\n    # access denied
 Error.+\n    # access denied
-Error.+\n    # access denied
+.+\n    # can't do pass without login
 .+\n    # authentication failed
 user1\n
 total[ ]0\n

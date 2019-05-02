@@ -1,0 +1,4 @@
+login USER2
+pass PASSWORD2
+logout
+whoami
