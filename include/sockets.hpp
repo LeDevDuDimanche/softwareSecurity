@@ -6,10 +6,12 @@
 
 
 namespace sockets {
-    // Send the full message and throw SocketError on error.
-    void send(std::string command, int sock);
+    const char end_of_transmission = '\x04';
 
-    // Try to receive the whole message.
+    // Send the full message and throw SocketError on error.
+    void send_all(std::string command, int sock);
+
+    // Try to receive the whole message and throw SocketError on error.
     std::string receive_all(int sock);
     std::string receive_all(int sock, int timeout, int waitBetween);
 

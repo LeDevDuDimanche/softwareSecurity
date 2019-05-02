@@ -22,6 +22,7 @@ private:
     long sock_fd;
     char *output_buffer;
     ssize_t written_in_buffer;
+    void send_to_socket(std::string to_send);
 
 public:
     std::string currentDir;
@@ -34,6 +35,8 @@ public:
     void send_error(std::string err);
     //This sends a message to the client that is not an error.
     void send_message(std::string msg);
+    //Sends an empty message. Sort of like an ACK.
+    void send_message();
     std::string get_file_location(std::string filepath);
     bool isBeingRead(std::string filename);
     bool isBeingDeleted(std::string filename);
@@ -49,7 +52,6 @@ public:
     void setUser(std::string user);
     void clearRead();
     void clearLogin();
-    void send_to_socket(std::string to_send);
     //setLogin updates the shared login table with the username
     void setLogin();
     std::string getAllLoggedInUsers();
