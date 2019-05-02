@@ -1,0 +1,9 @@
+PING[ ]127\.0\.0\.1[ ]\(127\.0\.0\.1\)[ ]56\(84\)[ ]bytes[ ]of[ ]data\.\n
+64[ ]bytes[ ]from[ ]127\.0\.0\.1:[ ]icmp_seq=1[ ]ttl=\d+[ ]time=\d+(\.\d+)?[ ]ms\n
+\n
+---[ ]127\.0\.0\.1[ ]ping[ ]statistics[ ]---\n
+1[ ]packets[ ]transmitted,
+    [ ][01][ ]received,[ ]\d{1,3}%[ ]packet[ ]loss,[ ]time[ ]\d+(\.\d+)?ms\n
+rtt[ ]min/avg/max/mdev[ ]=[ ]\d+(\.\d+)?(/\d+(\.\d+)?){3}[ ]ms\n
+.+\n    # can't do pass without login
+Error.+\n    # access denied

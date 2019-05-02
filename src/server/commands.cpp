@@ -209,12 +209,14 @@ namespace command
     void get(conn& conn, std::string filename) {
         conn = conn;    // supress compiler warnings
         filename = filename;    // supress compiler warnings
+        conn.send_message();
         // TODO
     }
     void put(conn& conn, std::string filename, unsigned int fileSize) {
         conn = conn;    // supress compiler warnings
         filename = filename;    // supress compiler warnings
         fileSize = fileSize;    // supress compiler warnings
+        conn.send_message();
         // TODO
     }
 

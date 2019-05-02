@@ -22,6 +22,7 @@ import pathlib
 import re
 import shutil
 import subprocess
+import sys
 import time
 
 
@@ -60,7 +61,7 @@ GREEN = "\033[0;32m"
 END_COLOR = "\033[0m"
 
 
-def get_tests():
+def get_tests(include_file_io):
     """Yield all tests."""
 
     yield test_hijack_exists
@@ -76,7 +77,8 @@ def get_tests():
         stdout_name = in_path.stem + STDOUT_SUFFIX
         file_io_name = in_path.stem + FILE_IO_SUFFIX
         yield get_regex_test(stdout_name, in_path, out_path)
-        yield get_regex_test(file_io_name, in_path, out_path, file_io=True)
+        if include_file_io:
+            yield get_regex_test(file_io_name, in_path, out_path, file_io=True)
 
     error_cases = list(ERROR_DIR.glob(IN_PATTERN))
     if not error_cases:
@@ -90,8 +92,9 @@ def get_tests():
         file_io_name = in_path.stem + FILE_IO_SUFFIX
         yield get_regex_test(stdout_name, in_path, out_path,
                              may_trigger_errors=True)
-        yield get_regex_test(file_io_name, in_path, out_path, file_io=True,
-                             may_trigger_errors=True)
+        if include_file_io:
+            yield get_regex_test(file_io_name, in_path, out_path, file_io=True,
+                                 may_trigger_errors=True)
 
 
 def setup():
@@ -322,7 +325,9 @@ def main():
 
     start = time.perf_counter()
 
-    tests = list(get_tests())
+    include_file_io = len(sys.argv) > 1 and sys.argv[1] == 'all'
+
+    tests = list(get_tests(include_file_io))
     num_passed = 0
     num_failed = 0
     try:
