@@ -1,0 +1,1 @@
+(?!put[ ]port:[ ]).*\n    # put takes exactly two parameters

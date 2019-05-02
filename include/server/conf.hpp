@@ -14,7 +14,7 @@ namespace AuthenticationMessages
     const int loggedIn = 1;
     const std::string incorrectPassword = "Incorrect password";
     const std::string logutMessage = "Successful logout";
-    const std::string mustBeLoggedIn = "A user must be logged in to issue this command";
+    const std::string mustBeLoggedIn = "access denied.";
 } // AuthenticationMessages
 
 std::vector<std::string> getLinesThatStartWithKeyWord(std::string keyword, std::string filename);

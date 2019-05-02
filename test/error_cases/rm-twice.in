@@ -1,4 +1,5 @@
 login user1
 pass password1
-mkdir ./.
-ls
+mkdir new
+rm new
+rm new

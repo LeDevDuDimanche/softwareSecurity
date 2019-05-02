@@ -1,1 +1,1 @@
-.+\n    # get takes a parameter
+(?!get[ ]port:[ ]).*\n    # get takes a parameter

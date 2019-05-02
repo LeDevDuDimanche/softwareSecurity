@@ -1,0 +1,1 @@
+(?!user1).*\n    # w takes no parameters

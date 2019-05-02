@@ -2,3 +2,4 @@ login user1
 pass password1
 mkdir a
 mkdir a
+ls

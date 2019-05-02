@@ -1,0 +1,2 @@
+(?!([A-Z][a-z]{2}[ ]){2}[ \d]\d[ ]\d\d:\d\d:\d\d[ ][^ \n]{2,5}[ ]\d\d\d\d).*\n
+# date takes no parameters

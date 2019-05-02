@@ -35,18 +35,11 @@ namespace command
     }
     //Authentication commands
     void login(conn& conn, std::string username) {
-        bool isLoggedIn = conn.isLoggedIn();
-        bool isBeingAuthenticated = conn.isBeingAuthenticated();
-        if (isBeingAuthenticated || isLoggedIn) {
-                conn.setLoginStatus(AuthenticationMessages::notLoggedIn);
-                conn.setUser("");
-                conn.send_message(AuthenticationMessages::incorrectCommandSequence);
-                return;
-        }
         std::string confPath = getConfFilepath();
         bool userExists = checkIfUserExists(username, confPath);
         if (!userExists) {
             conn.send_error(AuthenticationMessages::userDoesNotExist);
+            conn.setLoginStatus(AuthenticationMessages::notLoggedIn);
             return;
         }
         conn.setUser(username);

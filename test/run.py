@@ -36,6 +36,7 @@ TEST_CONFIG = HERE / 'grass.conf'
 
 IN_PATTERN = '*.in'
 OUT_SUFFIX = '.outregx'
+ALWAYS_RUN_FILE_IO = {'cd-cwd', 'ping', 'kthxbye'}
 ERROR_REGEX = re.compile(rb'^Error', re.MULTILINE)
 
 CLIENT = 'client'
@@ -77,7 +78,7 @@ def get_tests(include_file_io):
         stdout_name = in_path.stem + STDOUT_SUFFIX
         file_io_name = in_path.stem + FILE_IO_SUFFIX
         yield get_regex_test(stdout_name, in_path, out_path)
-        if include_file_io:
+        if include_file_io or in_path.stem in ALWAYS_RUN_FILE_IO:
             yield get_regex_test(file_io_name, in_path, out_path, file_io=True)
 
     error_cases = list(ERROR_DIR.glob(IN_PATTERN))
@@ -92,7 +93,7 @@ def get_tests(include_file_io):
         file_io_name = in_path.stem + FILE_IO_SUFFIX
         yield get_regex_test(stdout_name, in_path, out_path,
                              may_trigger_errors=True)
-        if include_file_io:
+        if include_file_io or in_path.stem in ALWAYS_RUN_FILE_IO:
             yield get_regex_test(file_io_name, in_path, out_path, file_io=True,
                                  may_trigger_errors=True)
 
