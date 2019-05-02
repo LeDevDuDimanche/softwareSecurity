@@ -7,14 +7,14 @@
 
 
 namespace sockets {
-    const int defaultTimeout = 220;    // ms
-    const int defaultWait = 40;    // ms
+    const int defaultTimeout = 1500;    // ms
+    const int defaultWait = 1500;    // ms
 
-    void send(std::string message, int sock) {
+    void send_all(std::string message, int sock) {
         const char* buffer_ptr = message.c_str();
         size_t bytes_left = message.length();
         while (bytes_left > 0) {
-            ssize_t bytes_sent = ::send(sock, buffer_ptr, bytes_left, 0);
+            ssize_t bytes_sent = send(sock, buffer_ptr, bytes_left, 0);
             if (bytes_sent == -1) {
                 throw SocketError("Couldn't send to socket");
             }
@@ -44,7 +44,7 @@ namespace sockets {
 
             if (pollVal == 0) {
                 // Timed out.
-                return message;
+                throw SocketError("Receiving message timed out");
             }
 
             if (pollFds[0].revents != POLLIN) {
@@ -57,12 +57,15 @@ namespace sockets {
                     if (errno == EWOULDBLOCK) {
                         break;
                     }
-                    throw SocketError("recv() from socket failed");
                 }
                 if (recvVal == 0) {
                     throw SocketError("Socket connection closed");
                 }
                 message.append(buffer, recvVal);
+                if (buffer[recvVal - 1] == end_of_transmission) {
+                    message.pop_back();    // Remove end-of-transmission byte
+                    return message;
+                }
             }
 
             wait = waitBetween;

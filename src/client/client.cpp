@@ -142,7 +142,7 @@ int main(int argc, const char* argv[]) {
         std::string command_name = parts[0];
 
         try {
-            sockets::send(command + '\n', sock);
+            sockets::send_all(command + '\n', sock);
         } catch (sockets::SocketError& e) {
             std::cerr << "Couldn't send command to server\n";
             return EXIT_FAILURE;

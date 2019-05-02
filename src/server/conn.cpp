@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 
 #include <grass.hpp>
+#include <sockets.hpp>
 
 //Calculates the location of the conf file
 std::string getConfFilepath() {
@@ -28,27 +29,10 @@ conn::conn(std::string currentDir, std::string baseDir, UserReadTable *urt,
 }
 
 void conn::send_to_socket(std::string to_send) {
-    #define SOCKET_SEND \
-        if ((send_status = send(this->sock_fd, this->output_buffer, this->written_in_buffer, 0 /*flag*/)) != this->written_in_buffer) \
-        { \
-            std::stringstream ss; \
-            ss << "cannot send message to socket\n status:" << send_status << "\nmessage:" << to_send; \
-            server_failure(ss.str().c_str()); \
-        } \
-        this->written_in_buffer = this->written_in_buffer - send_status;
-
-
-    ssize_t send_status = -1;
-    for (char c: to_send) {
-        if (this->written_in_buffer == SOCKET_BUFFER_SIZE) {
-            SOCKET_SEND
-        }
-        (this->output_buffer)[this->written_in_buffer] = c;
-        this->written_in_buffer += 1;
-    }
-
-    if (this->written_in_buffer > 0) {
-        SOCKET_SEND
+    try {
+        sockets::send_all(to_send, this->sock_fd);
+    } catch (sockets::SocketError& e) {
+        std::cerr << "Couldn't send message to socket\n";
     }
 }
 
@@ -56,18 +40,23 @@ std::string conn::getBase() {
     return this->baseDir;
 }
 
-void conn::send_error(std::string err) {
-    std::string to_send = "Error: ";
-    to_send.append(err);
-    to_send.append("\n");
-    this->send_to_socket(to_send);
+void conn::send_error(std::string message) {
+    this->send_message("Error: " + message);
 }
 
 void conn::send_message(std::string msg) {
     std::string to_send = msg;
-    to_send.append("\n");
+    if (!to_send.empty() && to_send.back() != '\n') {
+        to_send += '\n';
+    }
+    to_send += sockets::end_of_transmission;
     this->send_to_socket(to_send);
 }
+
+void conn::send_message() {
+    this->send_message("");
+}
+
 std::string  conn::getCurrentDir(std::string filepath) {
     if (this->currentDir == "") {
         if (filepath == "") {

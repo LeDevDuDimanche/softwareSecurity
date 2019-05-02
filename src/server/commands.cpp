@@ -1,3 +1,4 @@
+#include <exception>
 #include <iostream>
 #include <vector>
 
@@ -8,7 +9,6 @@
 #include <server/commandParsing.hpp>
 #include <server/conf.hpp>
 #include <server/fileFetching.hpp>
-#include <exception>
 
 namespace command
 {
@@ -26,7 +26,7 @@ namespace command
                 conn.send_message(ret);
             }
             else {
-                conn.send_to_socket(pingRetValue); 
+                conn.send_message(pingRetValue);
             }
         }
         catch(std::runtime_error& e) {
@@ -51,7 +51,7 @@ namespace command
         }
         conn.setUser(username);
         conn.setLoginStatus(AuthenticationMessages::authenticatingStatus);
-        // TODO conn.send_message(empty);
+        conn.send_message();
     }
     void pass(conn& conn, std::string pw) {
         std::string confPath = getConfFilepath();
@@ -73,7 +73,7 @@ namespace command
         //The authentication was sucessful if we make it this far.
         conn.setLoginStatus(AuthenticationMessages::loggedIn);
         conn.setLogin();
-        // TODO conn.send_message(empty);
+        conn.send_message();
     }
     void logout(conn& conn) {
         bool isLoggedIn = conn.isLoggedIn();
@@ -87,7 +87,8 @@ namespace command
         conn.clearRead();
         conn.clearLogin();
         conn.currentDir = "";
-        //conn.send_message(AuthenticationMessages::logutMessage);
+        conn.send_message();
+        std::cout << AuthenticationMessages::logutMessage << '\n';
     }
     //Directory traversal commands
     void cd(conn& conn, std::string dir) {
@@ -116,7 +117,7 @@ namespace command
                 conn.removeFileAsRead(oldCurrentDir);
                 conn.addFileAsRead(relativePath);
                 conn.currentDir = relativePath;
-                //conn.send_message(relativePath);
+                conn.send_message();
             }
             else {
                 if (pathvalidate::exists(newPath)) {
@@ -143,7 +144,7 @@ namespace command
         std::string currDir = conn.getCurrentDir("");
         std::string cmd = CommandConstants::ls;
         std::string lsOutput = SystemCommands::command_with_output(cmd, conn.getCurrentDir(""));
-        conn.send_to_socket(lsOutput);
+        conn.send_message(lsOutput);
     }
     //Modify directory command
     void mkdir(conn& conn, std::string newDirName) {
@@ -167,6 +168,7 @@ namespace command
             }
             conn.addFileAsRead(resolved);
             SystemCommands::mkdir(CommandConstants::mkdir, resolved);
+            conn.send_message();
         }
         catch(Parsing::BadPathException e) {
             conn.send_error(e.getDesc());
@@ -194,6 +196,7 @@ namespace command
             }
             conn.addFileAsDeleted(resolved);
             SystemCommands::rm(CommandConstants::rm, resolved);
+            conn.send_message();
         }
         catch(Parsing::BadPathException e) {
             conn.send_error(e.getDesc());
@@ -228,7 +231,7 @@ namespace command
         std::string cmd = CommandConstants::date;
         //Pass in the empty string since date is not used on a directory
         std::string dateOutput = SystemCommands::command_with_output(cmd, "");
-        conn.send_to_socket(dateOutput);
+        conn.send_message(dateOutput);
 
     }
     void grep(conn& conn, std::string pattern) {
@@ -294,49 +297,34 @@ namespace command
             }
             if (commandName == "rm") {
                 rm(conn, splitBySpace[1]);
-            }
-            if (commandName == "cd") {
+            } else if (commandName == "cd") {
                 cd(conn, splitBySpace[1]);
-                return false;
-            }
-            if (commandName == "ls") {
+            } else if (commandName == "ls") {
                 ls(conn);
-            }
-            if (commandName == "mkdir") {
+            } else if (commandName == "mkdir") {
                 mkdir(conn, splitBySpace[1]);
-                return false;
-            }
-            if (commandName == "get") {
+            } else if (commandName == "get") {
                 get(conn, splitBySpace[1]);
-            }
-            if (commandName == "put") {
-
-            }
-            if (commandName == "w") {
+            } else if (commandName == "put") {
+                get(conn, splitBySpace[1]);
+            } else if (commandName == "w") {
                 w(conn);
-            }
-            if (commandName == "whoami") {
+            } else if (commandName == "whoami") {
                 whoami(conn);
-            }
-            if (commandName == "date") {
+            } else if (commandName == "date") {
                 date(conn);
-            }
-            if (commandName == "ping") {
+            } else if (commandName == "ping") {
                 ping(conn, splitBySpace[1]);
-            }
-            if (commandName == "login") {
+            } else if (commandName == "login") {
                 login(conn, splitBySpace[1]);
-            }
-            if (commandName == "pass") {
+            } else if (commandName == "pass") {
                 pass(conn, splitBySpace[1]);
-            }
-            if (commandName == "exit") {
+            } else if (commandName == "exit") {
+                conn.send_message();
                 return true;
-            }
-            if (commandName == "logout") {
+            } else if (commandName == "logout") {
                 logout(conn);
-            }
-            if (commandName == "grep") {
+            } else if (commandName == "grep") {
                 grep(conn, splitBySpace[1]);
             }
         }

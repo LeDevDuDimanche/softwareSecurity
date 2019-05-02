@@ -1,1 +1,1 @@
-Error.*\n    # The command `kthxbye` doesn't exist
+Error.+\n    # The command `kthxbye` doesn't exist
