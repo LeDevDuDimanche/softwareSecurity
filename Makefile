@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -std=c++11 -Wall -Wextra -g -fno-stack-protector -z execstack -pthread
+CXXFLAGS = -std=c++11 -Wall -Wextra -g -fno-stack-protector -z execstack -pthread -m32
 
 include_flag = -I include/
 

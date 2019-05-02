@@ -56,7 +56,7 @@ namespace Parsing
     }
 
     std::string CommandNotFoundException::getDesc() {
-        return "The command " + this->commandName + " was not found\n";
+        return "The command " + this->commandName + " was not found";
     }
     CommandNotFoundException::CommandNotFoundException(std::string command)
     {
@@ -79,7 +79,7 @@ namespace Parsing
         std::stringstream ss2;
         ss1 << expectedArgumentTotal;
         ss2 << this->argumentTotal;
-        return "The command " + this->commandName + " takes in " + ss1.str() + " arguments, not " + ss2.str() + "\n";
+        return "The command " + this->commandName + " takes in " + ss1.str() + " arguments, not " + ss2.str();
     }
 
     bool hasCommand(std::string command) {

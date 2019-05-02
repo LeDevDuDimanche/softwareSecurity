@@ -39,6 +39,7 @@ namespace SystemCommands
 
     std::string command_with_output(std::string cmd, std::string dirname) {
         char buffer[CommandConstants::buffer_size];
+	    clear(buffer);
         std::vector<std::string> lines;
 	    int index = 0;
         char newLine = '\n';
