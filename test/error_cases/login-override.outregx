@@ -1,0 +1,3 @@
+.+\n    # user doesn't exist
+.+\n    # pass not allowed here
+Error.+\n    # access denied

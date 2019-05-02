@@ -1,0 +1,4 @@
+login user1
+login existsnot
+pass password1
+ls
