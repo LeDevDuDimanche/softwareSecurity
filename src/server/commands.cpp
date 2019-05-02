@@ -21,7 +21,7 @@ namespace command
                 conn.send_message(ret);
             }
             else {
-                conn.send_to_socket(pingRetValue);
+                conn.send_to_socket(pingRetValue); 
             }
         }
         catch(std::runtime_error& e) {
@@ -30,6 +30,12 @@ namespace command
     }
     //Authentication commands
     void login(conn& conn, std::string username) {
+        bool isLoggedIn = conn.isLoggedIn();
+        bool isBeingAuthenticated = conn.isBeingAuthenticated();
+        if (isBeingAuthenticated || isLoggedIn) {
+                conn.setLoginStatus(AuthenticationMessages::notLoggedIn);
+                conn.setUser("");
+        }
         std::string confPath = getConfFilepath();
         bool userExists = checkIfUserExists(username, confPath);
         if (!userExists) {
@@ -194,7 +200,6 @@ namespace command
         std::string cmd = CommandConstants::date;
         //Pass in the empty string since date is not used on a directory
         std::string dateOutput = SystemCommands::command_with_output(cmd, "");
-        std::cout << "date output " << dateOutput << std::flush;
         conn.send_to_socket(dateOutput);
 
     }

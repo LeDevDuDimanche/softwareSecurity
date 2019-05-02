@@ -11,6 +11,9 @@
 namespace Parsing
 {
 
+    bool isPrintable(char ch) {
+        return std::isprint(static_cast<unsigned char>(ch));
+    }
     std::vector<size_t> get_all_occurences(std::string s, char sub) {
         std::string str;
         std::vector<size_t> positions; // holds all the positions that sub occurs within str

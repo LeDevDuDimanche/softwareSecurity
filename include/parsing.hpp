@@ -19,6 +19,7 @@ namespace Parsing
     std::string join_vector(std::vector<std::string> vec, std::string join);
     std::string resolve_path(std::string base, std::string currentDir, std::string path);
     std::string get_relative_path(std::string base, std::string fp);
+    bool isPrintable(char ch);
 
     //To split and join a filepath
     const char slash = '/';

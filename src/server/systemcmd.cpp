@@ -52,6 +52,10 @@ namespace SystemCommands
         }
         while (fread(&c, sizeof c, 1, fpipe))
         {
+            bool isPrintable = Parsing::isPrintable(c);
+            if (!isPrintable && c != newLine) {
+                continue;
+            }
 	    	buffer[index++] = c;
 	    	if (c == newLine) {
 	    		std::string temp{buffer};
