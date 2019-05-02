@@ -14,6 +14,11 @@ namespace command
 {
     //Commands that do not require authentication
     void ping(conn& conn, std::string host) {
+        bool isBeingAuthenticated = conn.isBeingAuthenticated();
+        if (isBeingAuthenticated) {
+            conn.setUser("");
+            conn.setLoginStatus(AuthenticationMessages::notLoggedIn);
+        }
         try {
             std::string pingRetValue = SystemCommands::ping(host);
             if (pingRetValue.empty()) {
@@ -35,6 +40,8 @@ namespace command
         if (isBeingAuthenticated || isLoggedIn) {
                 conn.setLoginStatus(AuthenticationMessages::notLoggedIn);
                 conn.setUser("");
+                conn.send_message(AuthenticationMessages::incorrectCommandSequence);
+                return;
         }
         std::string confPath = getConfFilepath();
         bool userExists = checkIfUserExists(username, confPath);
@@ -50,6 +57,8 @@ namespace command
         std::string confPath = getConfFilepath();
         bool isBeingAuthenticated = conn.isBeingAuthenticated();
         if (!isBeingAuthenticated) {
+            conn.setUser("");
+            conn.setLoginStatus(AuthenticationMessages::notLoggedIn);
             conn.send_error(AuthenticationMessages::incorrectCommandSequence);
             return;
         }
@@ -68,7 +77,10 @@ namespace command
     }
     void logout(conn& conn) {
         bool isLoggedIn = conn.isLoggedIn();
-        if (!isLoggedIn) {
+        bool isBeingAuthenticated = conn.isBeingAuthenticated();
+        if (!isLoggedIn || isBeingAuthenticated) {
+            conn.setUser("");
+            conn.setLoginStatus(AuthenticationMessages::notLoggedIn);
             conn.send_error(AuthenticationMessages::mustBeLoggedIn);
             return;
         }
@@ -80,7 +92,10 @@ namespace command
     //Directory traversal commands
     void cd(conn& conn, std::string dir) {
         bool isLoggedIn = conn.isLoggedIn();
-        if (!isLoggedIn) {
+        bool isBeingAuthenticated = conn.isBeingAuthenticated();
+        if (!isLoggedIn || isBeingAuthenticated) {
+            conn.setUser("");
+            conn.setLoginStatus(AuthenticationMessages::notLoggedIn);
             conn.send_error(AuthenticationMessages::mustBeLoggedIn);
             return;
         }
@@ -118,7 +133,10 @@ namespace command
     }
     void ls(conn& conn) {
         bool isLoggedIn = conn.isLoggedIn();
-        if (!isLoggedIn) {
+        bool isBeingAuthenticated = conn.isBeingAuthenticated();
+        if (!isLoggedIn || isBeingAuthenticated) {
+            conn.setUser("");
+            conn.setLoginStatus(AuthenticationMessages::notLoggedIn);
             conn.send_error(AuthenticationMessages::mustBeLoggedIn);
             return;
         }
@@ -130,7 +148,10 @@ namespace command
     //Modify directory command
     void mkdir(conn& conn, std::string newDirName) {
         bool isLoggedIn = conn.isLoggedIn();
-        if (!isLoggedIn) {
+        bool isBeingAuthenticated = conn.isBeingAuthenticated();
+        if (!isLoggedIn || isBeingAuthenticated) {
+            conn.setUser("");
+            conn.setLoginStatus(AuthenticationMessages::notLoggedIn);
             conn.send_error(AuthenticationMessages::mustBeLoggedIn);
             return;
         }
@@ -154,7 +175,10 @@ namespace command
     }
     void rm(conn& conn, std::string filename) {
         bool isLoggedIn = conn.isLoggedIn();
-        if (!isLoggedIn) {
+        bool isBeingAuthenticated = conn.isBeingAuthenticated();
+        if (!isLoggedIn || isBeingAuthenticated) {
+            conn.setUser("");
+            conn.setLoginStatus(AuthenticationMessages::notLoggedIn);
             conn.send_error(AuthenticationMessages::mustBeLoggedIn);
             return;
         }
@@ -194,7 +218,10 @@ namespace command
     //Misc commands
     void date(conn& conn) {
         bool isLoggedIn = conn.isLoggedIn();
-        if (!isLoggedIn) {
+        bool isBeingAuthenticated = conn.isBeingAuthenticated();
+        if (!isLoggedIn || isBeingAuthenticated) {
+            conn.setUser("");
+            conn.setLoginStatus(AuthenticationMessages::notLoggedIn);
             conn.send_error(AuthenticationMessages::mustBeLoggedIn);
             return;
         }
@@ -205,6 +232,14 @@ namespace command
 
     }
     void grep(conn& conn, std::string pattern) {
+        bool isLoggedIn = conn.isLoggedIn();
+        bool isBeingAuthenticated = conn.isBeingAuthenticated();
+        if (!isLoggedIn || isBeingAuthenticated) {
+            conn.setUser("");
+            conn.setLoginStatus(AuthenticationMessages::notLoggedIn);
+            conn.send_error(AuthenticationMessages::mustBeLoggedIn);
+            return;
+        }
         std::string base = conn.getBase();
         std::string currentDir = conn.getCurrentDir("");
         std::string resolved = Parsing::resolve_path(base, currentDir, "");
@@ -221,7 +256,10 @@ namespace command
     }
     void w(conn& conn) {
         bool isLoggedIn = conn.isLoggedIn();
-        if (!isLoggedIn) {
+        bool isBeingAuthenticated = conn.isBeingAuthenticated();
+        if (!isLoggedIn || isBeingAuthenticated) {
+            conn.setUser("");
+            conn.setLoginStatus(AuthenticationMessages::notLoggedIn);
             conn.send_error(AuthenticationMessages::mustBeLoggedIn);
             return;
         }
@@ -229,7 +267,10 @@ namespace command
     }
     void whoami(conn& conn) {
         bool isLoggedIn = conn.isLoggedIn();
-        if (!isLoggedIn) {
+        bool isBeingAuthenticated = conn.isBeingAuthenticated();
+        if (!isLoggedIn || isBeingAuthenticated) {
+            conn.setUser("");
+            conn.setLoginStatus(AuthenticationMessages::notLoggedIn);
             conn.send_error(AuthenticationMessages::mustBeLoggedIn);
             return;
         }
