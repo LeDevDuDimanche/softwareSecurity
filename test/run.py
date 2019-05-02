@@ -70,32 +70,13 @@ def get_tests(include_file_io):
     error_free_cases = list(ERROR_FREE_DIR.glob(IN_PATTERN))
     if not error_free_cases:
         print("Error: couldn't find any 'error-free' test cases")
-
-    stems = {path: path.stem for path in error_free_cases}
-    error_free_cases.sort(key=stems.get)
-    for in_path in error_free_cases:
-        out_path = in_path.with_suffix(OUT_SUFFIX)
-        stdout_name = in_path.stem + STDOUT_SUFFIX
-        file_io_name = in_path.stem + FILE_IO_SUFFIX
-        yield get_regex_test(stdout_name, in_path, out_path)
-        if include_file_io or in_path.stem in ALWAYS_RUN_FILE_IO:
-            yield get_regex_test(file_io_name, in_path, out_path, file_io=True)
+    yield from get_regex_tests(error_free_cases, include_file_io)
 
     error_cases = list(ERROR_DIR.glob(IN_PATTERN))
     if not error_cases:
         print("Error: couldn't find any 'error' test cases")
-
-    stems = {path: path.stem for path in error_cases}
-    error_cases.sort(key=stems.get)
-    for in_path in error_cases:
-        out_path = in_path.with_suffix(OUT_SUFFIX)
-        stdout_name = in_path.stem + STDOUT_SUFFIX
-        file_io_name = in_path.stem + FILE_IO_SUFFIX
-        yield get_regex_test(stdout_name, in_path, out_path,
-                             may_trigger_errors=True)
-        if include_file_io or in_path.stem in ALWAYS_RUN_FILE_IO:
-            yield get_regex_test(file_io_name, in_path, out_path, file_io=True,
-                                 may_trigger_errors=True)
+    yield from get_regex_tests(error_cases, include_file_io,
+                               may_trigger_errors=True)
 
 
 def setup():
@@ -215,7 +196,12 @@ def run_system_processes(client_args, should_exit, in_bytes=None):
 def present_output(text_bytes, title):
     """Return the bytes in a readable representation."""
     text = escape_decode(text_bytes)
-    return f"----- {title} -----\n{text}----- END {title} -----"
+    return prominent(title) + '\n' + text + prominent(f"END {title}")
+
+
+def prominent(text):
+    """Return a prominently displayed version of the text."""
+    return f"----- {text} -----"
 
 
 def escape_decode(text_bytes):
@@ -250,8 +236,22 @@ def test_hijack_exists():
     return name, passed, info
 
 
-def get_regex_test(name, in_path, out_path, file_io=False,
-                   may_trigger_errors=False):
+def get_regex_tests(in_paths, include_file_io, may_trigger_errors=False):
+    """Yield test functions."""
+
+    stems = {path: path.stem for path in in_paths}
+    for in_path in sorted(in_paths, key=stems.get):
+        out_path = in_path.with_suffix(OUT_SUFFIX)
+        stdout_name = in_path.stem + STDOUT_SUFFIX
+        file_io_name = in_path.stem + FILE_IO_SUFFIX
+        yield get_regex_test(stdout_name, in_path, out_path,
+                             may_trigger_errors=may_trigger_errors)
+        if include_file_io or in_path.stem in ALWAYS_RUN_FILE_IO:
+            yield get_regex_test(file_io_name, in_path, out_path, file_io=True,
+                                 may_trigger_errors=may_trigger_errors)
+
+
+def get_regex_test(name, in_path, out_path, may_trigger_errors, file_io=False):
     """Return a test function.
 
     The returned test function compared uses the contents of the file at
@@ -310,8 +310,8 @@ def get_regex_test(name, in_path, out_path, file_io=False,
                 return name, False, info
 
         if not re.fullmatch(out_pattern, client_bytes, re.VERBOSE):
-            info = ("Unexpected client output.\n"
-                    "----- EXPECTED (regex) -----\n" +
+            info = ("Unexpected client output.\n" +
+                    prominent("EXPECTED (regex)") + '\n' +
                     out_pattern.decode('ascii') +
                     present_output(client_bytes, "CLIENT OUTPUT"))
             return name, False, info
