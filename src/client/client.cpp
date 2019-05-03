@@ -145,6 +145,13 @@ int main(int argc, const char* argv[]) {
 
 
         try {
+            sockets::send(command + '\n', sock);
+        } catch (sockets::SocketError& e) {
+            std::cerr << "Couldn't send command to server\n";
+            return EXIT_FAILURE;
+        }
+
+        try {
             response = sockets::receive_all(sock);
         } catch (sockets::SocketError& e) {
             std::cerr << "Couldn't receive server response\n";
@@ -174,13 +181,6 @@ int main(int argc, const char* argv[]) {
 
         if (command_name == "put") {
             // TODO
-        }
-
-        try {
-            sockets::send(command + '\n', sock);
-        } catch (sockets::SocketError& e) {
-            std::cerr << "Couldn't send command to server\n";
-            return EXIT_FAILURE;
         }
     }
 
