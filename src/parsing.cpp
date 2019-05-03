@@ -11,6 +11,12 @@
 namespace Parsing
 {
 
+    std::string format(std::string str) {
+        std::string temp = str.append(Parsing::FormatCharacter);
+        temp.insert(0, Parsing::FormatCharacter);
+        return temp;
+    }
+
     bool isPrintable(char ch) {
         return std::isprint(static_cast<unsigned char>(ch));
     }

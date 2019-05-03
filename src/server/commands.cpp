@@ -42,6 +42,14 @@ namespace command
             conn.setLoginStatus(AuthenticationMessages::notLoggedIn);
             return;
         }
+        bool isLoggedIn = conn.isLoggedIn();
+        if (isLoggedIn) {
+            conn.clearRead();
+            conn.clearLogin();
+            if (conn.currentDir != "") {
+
+            }
+        }
         conn.setUser(username);
         conn.setLoginStatus(AuthenticationMessages::authenticatingStatus);
         conn.send_message();
@@ -136,7 +144,8 @@ namespace command
         }
         std::string currDir = conn.getCurrentDir("");
         std::string cmd = CommandConstants::ls;
-        std::string lsOutput = SystemCommands::command_with_output(cmd, conn.getCurrentDir(""));
+        std::string formattedDir = Parsing::format(conn.getCurrentDir(""));
+        std::string lsOutput = SystemCommands::command_with_output(cmd, formattedDir);
         conn.send_message(lsOutput);
     }
     //Modify directory command
@@ -160,6 +169,7 @@ namespace command
                 return;
             }
             conn.addFileAsRead(resolved);
+            resolved = Parsing::format(resolved);
             SystemCommands::mkdir(CommandConstants::mkdir, resolved);
             conn.send_message();
         }
@@ -183,11 +193,17 @@ namespace command
         try {
             resolved = Parsing::resolve_path(base, currentDir, filename);
             bool isBeingRead = conn.isBeingRead(resolved);
+            bool canDelete = resolved.empty() || resolved != currentDir;
+            if (!canDelete) {
+                conn.send_error(Parsing::entryCantBeDeleted);
+                return;
+            }
             if (isBeingRead) {
                 conn.send_error(Parsing::entryInUse);
                 return;
             }
             conn.addFileAsDeleted(resolved);
+            resolved = Parsing::format(resolved);
             SystemCommands::rm(CommandConstants::rm, resolved);
             conn.send_message();
         }
@@ -243,8 +259,10 @@ namespace command
         std::string resolved = Parsing::resolve_path(base, currentDir, "");
         std::vector<std::string> files = FileFetching::fetch_all_files_from_dir(resolved);
         std::vector<std::string> candidateFiles;
+        std::string formattedPattern = Parsing::format(pattern);
         for (std::string file: files) {
-            bool match = SystemCommands::grep(file, pattern);
+            std::string formatFile = Parsing::format(file);
+            bool match = SystemCommands::grep(formatFile, formattedPattern);
             if (match) {
                 candidateFiles.push_back(file);
             }
