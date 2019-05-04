@@ -10,9 +10,14 @@
 
 namespace Parsing
 {
+    std::string cleanDir(std::string dir) {
+        std::string temp = dir;
+        temp.erase(std::remove(temp.begin(), temp.end(), formatChar), temp.end());
+        return temp;
+    }
 
     std::string format(std::string str) {
-        std::string temp = str.append(Parsing::FormatCharacter);
+        std::string temp = str.append(Parsing::FormatCharacter); 
         temp.insert(0, Parsing::FormatCharacter);
         return temp;
     }

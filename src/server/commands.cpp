@@ -20,7 +20,8 @@ namespace command
             conn.setLoginStatus(AuthenticationMessages::notLoggedIn);
         }
         try {
-            std::string pingRetValue = SystemCommands::ping(host);
+            host = Parsing::cleanDir(host);
+            std::string pingRetValue = SystemCommands::ping(Parsing::format(host));
             if (pingRetValue.empty()) {
                 std::string ret = "ping: " + host + ": Name or service not known";
                 conn.send_message(ret);
@@ -144,8 +145,7 @@ namespace command
         }
         std::string currDir = conn.getCurrentDir("");
         std::string cmd = CommandConstants::ls;
-        std::string formattedDir = Parsing::format(conn.getCurrentDir(""));
-        std::string lsOutput = SystemCommands::command_with_output(cmd, formattedDir);
+        std::string lsOutput = SystemCommands::command_with_output(cmd, currDir);
         conn.send_message(lsOutput);
     }
     //Modify directory command
@@ -163,6 +163,10 @@ namespace command
         std::string resolved;
         try {
             resolved = Parsing::resolve_path(base, currentDir, newDirName);
+            if (resolved.length() >= Parsing::maxLength) {
+                conn.send_error(Parsing::entryTooLong);
+                return;
+            }
             bool isBeingDeleted = conn.isBeingDeleted(resolved);
             if (isBeingDeleted) {
                 conn.send_error(Parsing::entryDoesNotExist);

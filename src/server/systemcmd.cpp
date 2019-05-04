@@ -37,7 +37,7 @@ namespace SystemCommands
         return pingRetValue;
     }
 
-    std::string command_with_output(std::string cmd, std::string dirname) {
+    std::string command_with_output(std::string cmd, std::string dirname) { 
         char buffer[CommandConstants::buffer_size];
 	    clear(buffer);
         std::vector<std::string> lines;
@@ -73,12 +73,13 @@ namespace SystemCommands
         return retStr;
     }
     void mkdir(std::string cmd, std::string dirname) {
-        bool exists = pathvalidate::exists(dirname);
+        std::string cleanDir = Parsing::cleanDir(dirname); 
+        bool exists = pathvalidate::exists(cleanDir);
         if (exists) {
             Parsing::BadPathException e{Parsing::entryExists};
             throw e;
         }
-        std::vector<std::string> split_dir = Parsing::split_string(dirname, Parsing::slash);
+        std::vector<std::string> split_dir = Parsing::split_string(cleanDir, Parsing::slash);
         split_dir.pop_back();
         std::string parentDir = Parsing::join_vector(split_dir, Parsing::join_path);
         bool parentExists = pathvalidate::isDir(parentDir);
@@ -91,7 +92,8 @@ namespace SystemCommands
     }
 
     void rm(std::string cmd, std::string dirname) {
-        bool exists = pathvalidate::exists(dirname);
+        std::string cleanDir = Parsing::cleanDir(dirname);
+        bool exists = pathvalidate::exists(cleanDir);
         if (!exists) {
             Parsing::BadPathException e{Parsing::entryDoesNotExist};
             throw e;

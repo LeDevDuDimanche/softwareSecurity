@@ -16,13 +16,14 @@ namespace CommandConstants
     const std::string grep = "grep -q ";
     //This constant is for when you want a default buffer size
     //This number was chosen with heuristics
-    const unsigned int buffer_size = 512;
+    const unsigned int buffer_size = 256;
 } // CommandConstants
 
 //These functions are meant for when you want to run a system command
 //and retrieve the output from that command
 namespace SystemCommands
 {
+
     std::string ping(std::string host);
 
     std::string command_with_output(std::string cmd, std::string dirname);

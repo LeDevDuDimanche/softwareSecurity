@@ -14,6 +14,7 @@ namespace Parsing
         std::string getDesc();
     };
     
+    std::string cleanDir(std::string dir);
     std::string format(std::string str);
     std::vector<std::string> split_string(std::string s, char delim);
     std::string join_vector(std::vector<std::string> vec, std::string join);
@@ -21,7 +22,10 @@ namespace Parsing
     std::string get_relative_path(std::string base, std::string fp);
     bool isPrintable(char ch);
 
+    const int maxLength = 128;
+
     //To split and join a filepath
+    const char formatChar = '\'';  
     const char slash = '/';
     const char space = ' ';
     const char delimiter = '\0';
@@ -40,5 +44,6 @@ namespace Parsing
     const std::string entryDoesNotExist = "The parent directory of this directory does not exist";
     const std::string entryInUse = "This directory or file is in use";
     const std::string entryCantBeDeleted = "This entry can't be deleted";
+    const std::string entryTooLong = "Filepath exceeds maximum length";
 } // Parsing
 #endif

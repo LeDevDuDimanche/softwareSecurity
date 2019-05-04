@@ -129,9 +129,10 @@ void conn::clearRead() {
 }
 
 void conn::clearLogin() {
+    ActiveUserTable *userTable = this->activeUserTable;
+    userTable->removeUser(this->user);
     this->user = "";
     this->setLoginStatus(AuthenticationMessages::notLoggedIn);
-    //Clear the login table
 }
 
 void conn::setLogin() {
