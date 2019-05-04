@@ -188,7 +188,7 @@ namespace command
     }
     struct get_handler_args {
         conn *c;
-        std::string filename; 
+        std::string *filename; 
     };
 
 
@@ -204,25 +204,29 @@ namespace command
         doing what is was doing earlier.
         unlock mutex when done copying handler args like the filename and the connection object
         */
-        conn *c = handler_params->c; 
-        std::string filename = std::string(handler_params->filename);
-
         copy_get_args_mutex.lock();
         copying_get_args --;
         copy_get_args_mutex.unlock();
+        conn *c = handler_params->c;  
+ 
+        #define DEFAULT_ERR_HANDLER \
+            delete handler_params->filename; \
+            delete handler_params; \
+            return NULL;
         
         bool isLoggedIn = c->isLoggedIn();
         std::cout << "is logged in " << isLoggedIn <<  "\n" << std::flush;
+        std::cout << "filename " << *(handler_params->filename) << "\n" << std::flush;
         if (!isLoggedIn) {
             c->send_error(AuthenticationMessages::mustBeLoggedIn);
-            return NULL;
+            DEFAULT_ERR_HANDLER
         }
 
 
-        std::string file_location = c->getCurrentDir(filename);
+        std::string file_location = c->getCurrentDir(*(handler_params->filename));
         if (!pathvalidate::isFile(file_location)) {
             c->send_error("this file doesn't exist");
-            return NULL;
+            DEFAULT_ERR_HANDLER
         }
 
 
@@ -241,14 +245,15 @@ namespace command
                 accept_args = bind_to_port(port, &server_fd);
             } catch (const MySocketException e) {
                 c->send_error("unable to create a socket for the get command");
-                std::cerr << e.what() << std::endl;
-                return NULL;
+                std::cerr << e.what() << std::endl; 
+                DEFAULT_ERR_HANDLER
             }
             break;
         } 
 
 
         long get_socket = -1; 
+        std::cout << "waiting for a connection on the newly created socket for get_handler" << std::flush;
         //we accept only one socket connection
         if ((get_socket = accept(server_fd, accept_args.address,
                         accept_args.addrlen_ptr)) < 0)
@@ -257,6 +262,7 @@ namespace command
             c->send_error("cannot open a socket for you to receive the file sorry");
             pthread_exit(NULL);
             close(server_fd);
+            DEFAULT_ERR_HANDLER
         }
         //need to find a good port from a list of available ports.
         std::string to_send = PORT_NUMBER_GET_KEYWORD;
@@ -282,19 +288,21 @@ namespace command
         long ret_create;
         pthread_t get_thread;
 
-        get_handler_args args = {
+        std::string *copied_filename = new std::string();
+        copied_filename->append(filename);
+        get_handler_args* args = new get_handler_args {
             c,
-            std::string(filename)
+            copied_filename
         }; 
-        
-        std::cout << "Is logged in outside thread" << c->isLoggedIn();
 
         copy_get_args_mutex.lock();
         copying_get_args++;
         copy_get_args_mutex.unlock();
+        std::cout << "Is logged in outside thread" << c->isLoggedIn();
+ 
 
         if ((ret_create = pthread_create(&get_thread, NULL /*default attributes*/,
-                    get_handler, (void *) &args))) {
+                    get_handler, (void *) args))) { 
             copy_get_args_mutex.lock();
             copying_get_args--;
             copy_get_args_mutex.unlock();
