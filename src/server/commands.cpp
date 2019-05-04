@@ -163,7 +163,7 @@ namespace command
         std::string resolved;
         try {
             resolved = Parsing::resolve_path(base, currentDir, newDirName);
-            if (resolved.length() >= Parsing::maxLength) {
+            if (Parsing::exceedsMaxLength(base, resolved)) {
                 conn.send_error(Parsing::entryTooLong);
                 return;
             }

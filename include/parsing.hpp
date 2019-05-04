@@ -14,6 +14,7 @@ namespace Parsing
         std::string getDesc();
     };
     
+    bool exceedsMaxLength(std::string baseDir, std::string dir);
     std::string cleanDir(std::string dir);
     std::string format(std::string str);
     std::vector<std::string> split_string(std::string s, char delim);

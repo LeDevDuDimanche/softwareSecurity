@@ -58,6 +58,7 @@ namespace SystemCommands
                 continue;
             }
 	    	buffer[index++] = c;
+            printf("Hello %c", c);
 	    	if (c == newLine) {
 	    		std::string temp{buffer};
 	    		lines.push_back(temp);

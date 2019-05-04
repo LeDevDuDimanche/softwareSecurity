@@ -10,6 +10,23 @@
 
 namespace Parsing
 {
+
+    bool exceedsMaxLength(std::string baseDir, std::string dir) {
+        std::vector<std::string> baseVec = split_string(baseDir, slash);
+        std::vector<std::string> dirVec = split_string(dir, slash); 
+        size_t l = dirVec.size();
+        for(size_t i = 0; i < l; i++) {
+            if (baseVec[i] == dirVec[i]) {
+                dirVec.erase(dirVec.begin());
+                baseDir.erase(baseDir.begin());
+            }
+            else {
+                break;
+            }
+        }
+        std::string relative = join_vector(dirVec, join_path);
+        return relative.length() > maxLength;
+    }
     std::string cleanDir(std::string dir) {
         std::string temp = dir;
         temp.erase(std::remove(temp.begin(), temp.end(), formatChar), temp.end());

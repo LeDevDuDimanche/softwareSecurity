@@ -1,7 +1,7 @@
 #ifndef SOCKETS_HPP
 #define SOCKETS_HPP
 
-#include <stdexcept>
+#include<iostream>
 #include <string>
 
 
@@ -15,7 +15,7 @@ namespace sockets {
     std::string receive_all(int sock);
     std::string receive_all(int sock, int timeout, int waitBetween);
 
-    class SocketError: public virtual std::runtime_error {
+    class SocketError: public virtual std::runtime_error { 
         using std::runtime_error::runtime_error;
     };
 }
