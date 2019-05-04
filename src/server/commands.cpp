@@ -147,7 +147,8 @@ namespace command
         }
         std::string currDir = conn.getCurrentDir("");
         std::string cmd = CommandConstants::ls;
-        std::string lsOutput = SystemCommands::command_with_output(cmd, currDir);
+        std::string escaped = Parsing::format(currDir);
+        std::string lsOutput = SystemCommands::command_with_output(cmd, escaped);
         conn.send_message(lsOutput);
     }
     //Modify directory command
@@ -157,7 +158,7 @@ namespace command
         if (!isLoggedIn || isBeingAuthenticated) {
             conn.setUser("");
             conn.setLoginStatus(AuthenticationMessages::notLoggedIn);
-            std::string mustBeLoggedIn = Parsing::bufferToString(AuthenticationMessages::mustBeLoggedIn.c_str()); 
+            std::string mustBeLoggedIn = Parsing::bufferToString(AuthenticationMessages::mustBeLoggedIn.c_str());
             conn.send_error(mustBeLoggedIn);
             return;
         }
