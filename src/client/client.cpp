@@ -69,6 +69,13 @@ void *get_recv_handler(void *params) {
 
 
 
+void *get_handler(void *port_number_arg) {
+    long port_number = *((long *) port_number_arg);
+    std::cerr << "created thread" << port_number;
+
+    return NULL;
+}
+
 int main(int argc, const char* argv[]) {
     if (argc != 3 && argc != 5) {
         print_usage(argc, argv);
@@ -159,13 +166,21 @@ int main(int argc, const char* argv[]) {
         }
         *out << response << std::flush;
 
+        
         if (watching_for_port_number) {
             std::smatch port_matches;
             if (std::regex_search(response, port_matches, PORT_NUMBER_GET_REGEX)) {
                 long get_port_number = std::stol(port_matches.str(1));
                 watching_for_port_number = false;
                 *out << "Found port number "<<get_port_number << std::flush;
-                //TODO create a thread that connects to the port number
+
+                pthread_t get_thread;
+                long ret_create;
+                if ((ret_create = pthread_create(&get_thread, NULL /*default attributes*/,
+                            get_handler, (void *) &get_port_number))) {
+                    std::cerr << "cannot create thread for get command response handler\n";
+                    return EXIT_FAILURE;
+                }   
             }
         }
 

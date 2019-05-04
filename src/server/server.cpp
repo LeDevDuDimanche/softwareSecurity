@@ -87,10 +87,9 @@ void *connection_handler(void* sockfd) {
     std::string read_str;
     int buffer_idx, end_last_copy;
 
-    conn thread_conn = conn("", basedir, &userReadTable, &fileDeleteTable, &activeUserTable, socket_id);
+    conn* thread_conn = new conn("", basedir, &userReadTable, &fileDeleteTable, &activeUserTable, socket_id);
 
-    bool exit = false;
-    //TODO change the condition that we end this loop to the fact that we process a CTRL+C character
+    bool exit = false; 
     while ((valread = read(socket_id, buffer, SOCKET_BUFFER_SIZE)) > 0 && valread < SOCKET_BUFFER_SIZE)
     {
         read_str = std::string(buffer, valread);
@@ -127,6 +126,8 @@ void *connection_handler(void* sockfd) {
         }
 
         if (exit) {
+            delete thread_conn;
+            close(socket_id);
             break;
         }
     }
