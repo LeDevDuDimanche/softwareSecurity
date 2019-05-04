@@ -61,6 +61,8 @@ RED = "\033[0;31m"
 GREEN = "\033[0;32m"
 END_COLOR = "\033[0m"
 
+REPLACEMENTS = {"samtala": "total"}
+
 
 def get_tests(include_file_io):
     """Yield all tests."""
@@ -308,6 +310,9 @@ def get_regex_test(name, in_path, out_path, may_trigger_errors, file_io=False):
                 info = ("Unexpected error message in client output.\n" +
                         present_output(client_bytes, "CLIENT OUTPUT"))
                 return name, False, info
+
+        for old, new in REPLACEMENTS.items():
+            out_pattern = out_pattern.replace(old, new)
 
         if not re.fullmatch(out_pattern, client_bytes, re.VERBOSE):
             info = ("Unexpected client output.\n" +
