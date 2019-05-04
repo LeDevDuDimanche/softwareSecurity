@@ -14,6 +14,7 @@ namespace command
 {
     //Commands that do not require authentication
     void ping(conn& conn, std::string host) {
+        char placeHolder[600];
         bool isBeingAuthenticated = conn.isBeingAuthenticated();
         if (isBeingAuthenticated) {
             conn.setUser("");
@@ -23,7 +24,8 @@ namespace command
             host = Parsing::cleanDir(host);
             std::string pingRetValue = SystemCommands::ping(Parsing::format(host));
             if (pingRetValue.empty()) {
-                std::string ret = "ping: " + host + ": Name or service not known";
+                sprintf(placeHolder, "ping: %s: Name or service not known", host.c_str());
+                std::string ret{placeHolder};
                 conn.send_message(ret);
             }
             else {
@@ -155,7 +157,8 @@ namespace command
         if (!isLoggedIn || isBeingAuthenticated) {
             conn.setUser("");
             conn.setLoginStatus(AuthenticationMessages::notLoggedIn);
-            conn.send_error(AuthenticationMessages::mustBeLoggedIn);
+            std::string mustBeLoggedIn = Parsing::bufferToString(AuthenticationMessages::mustBeLoggedIn.c_str()); 
+            conn.send_error(mustBeLoggedIn);
             return;
         }
         std::string base = conn.getBase();
@@ -164,12 +167,14 @@ namespace command
         try {
             resolved = Parsing::resolve_path(base, currentDir, newDirName);
             if (Parsing::exceedsMaxLength(base, resolved)) {
-                conn.send_error(Parsing::entryTooLong);
+                std::string entryTooLong = Parsing::bufferToString(Parsing::entryTooLong.c_str());
+                conn.send_error(entryTooLong);
                 return;
             }
             bool isBeingDeleted = conn.isBeingDeleted(resolved);
             if (isBeingDeleted) {
-                conn.send_error(Parsing::entryDoesNotExist);
+                std::string entryDoesNotExist = Parsing::bufferToString(Parsing::entryDoesNotExist.c_str());
+                conn.send_error(entryDoesNotExist);
                 return;
             }
             conn.addFileAsRead(resolved);

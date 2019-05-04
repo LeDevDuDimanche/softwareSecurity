@@ -24,7 +24,7 @@ namespace SystemCommands
         std::string pingRetValue;
         std::thread t([&cv, &pingRetValue, &host]()
         {
-            pingRetValue = command_with_output(CommandConstants::ping, host);
+            pingRetValue = command_with_output(CommandConstants::ping + host, "");
             cv.notify_one();
         });
 
@@ -58,10 +58,14 @@ namespace SystemCommands
                 continue;
             }
 	    	buffer[index++] = c;
-            printf("Hello %c", c);
 	    	if (c == newLine) {
 	    		std::string temp{buffer};
-	    		lines.push_back(temp);
+                if (dirname.empty()) {
+                    lines.push_back(temp);
+                }
+                else {
+                    lines.push_back(Parsing::bufferToString(buffer));
+                }
 	    		clear(buffer);
 	    		index = 0;
 

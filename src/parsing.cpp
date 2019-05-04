@@ -3,14 +3,29 @@
 #include <vector>
 #include <sstream>
 #include <algorithm>
+#include <iterator>
 
 #include <parsing.hpp>
-
 
 
 namespace Parsing
 {
 
+    std::string bufferToString(char *buffer) {
+        char placeHolder[bufferSize];
+        sprintf(placeHolder, buffer);
+        std::string ret;
+        ret.assign(placeHolder);
+        return ret;
+    }
+
+    std::string bufferToString(const char *buffer) {
+        char placeHolder[bufferSize];
+        sprintf(placeHolder, buffer);
+        std::string ret;
+        ret.assign(placeHolder);
+        return ret;
+    }
     bool exceedsMaxLength(std::string baseDir, std::string dir) {
         std::vector<std::string> baseVec = split_string(baseDir, slash);
         std::vector<std::string> dirVec = split_string(dir, slash); 

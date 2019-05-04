@@ -4,6 +4,7 @@
 #include <vector> 
 namespace Parsing
 {
+    const unsigned int bufferSize = 1000;
     class BadPathException
     {
     private:
@@ -13,7 +14,9 @@ namespace Parsing
         ~BadPathException();
         std::string getDesc();
     };
-    
+
+    std::string bufferToString(char *buffer);
+    std::string bufferToString(const char *buffer);
     bool exceedsMaxLength(std::string baseDir, std::string dir);
     std::string cleanDir(std::string dir);
     std::string format(std::string str);
