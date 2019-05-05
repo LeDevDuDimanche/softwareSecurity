@@ -9,7 +9,7 @@ namespace FileFetching
 {
     std::vector<std::string> fetch_all_files_from_dir(std::string dir) {
         std::string ls = CommandConstants::simple_ls;
-        std::string allEntries = SystemCommands::command_with_output(ls, dir);
+        std::string allEntries = SystemCommands::command_with_output(ls, Parsing::cleanDir(dir));
         std::vector<std::string> entriesVector = Parsing::split_string(allEntries, Parsing::new_line_char);
         std::vector<std::string> files;
         for (std::string entry: entriesVector) {
