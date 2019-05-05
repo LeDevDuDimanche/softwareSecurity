@@ -197,7 +197,7 @@ namespace command
                 return;
             }
             conn.addFileAsRead(resolved);
-            resolved = Parsing::format(resolved);
+            resolved = Parsing::format(Parsing::cleanDir(resolved));
             SystemCommands::mkdir(CommandConstants::mkdir, resolved);
             conn.send_message();
         }
@@ -231,7 +231,7 @@ namespace command
                 return;
             }
             conn.addFileAsDeleted(resolved);
-            resolved = Parsing::format(resolved);
+            resolved = Parsing::format(Parsing::cleanDir(resolved));
             SystemCommands::rm(CommandConstants::rm, resolved);
             conn.send_message();
         }
@@ -372,7 +372,7 @@ namespace command
         close(get_socket);
         GET_HANDLER_EXIT
 
-    /*
+        /*
         TODO
         free port 
         remove port from recorded used ports
@@ -426,11 +426,18 @@ namespace command
 
     
     void put(conn& conn, std::string filename, unsigned int fileSize) {
-        conn = conn;    // supress compiler warnings
-        filename = filename;    // supress compiler warnings
-        fileSize = fileSize;    // supress compiler warnings
-        conn.send_message();
-        // TODO
+        std::string filePath = conn.getCurrentDir(filename);
+        bool alreadyExists = pathvalidate::exists(filePath);
+        if (alreadyExists) {
+            conn.send_error(Parsing::entryExists);
+            return;
+        }
+        bool isBeingDeleted = conn.isBeingDeleted(filePath);
+        if (isBeingDeleted) {
+            conn.send_error(Parsing::entryDoesNotExist);
+            return;
+        }
+        
     }
 
     //Misc commands
