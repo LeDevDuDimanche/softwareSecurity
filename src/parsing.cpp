@@ -28,7 +28,7 @@ namespace Parsing
     }
     bool exceedsMaxLength(std::string baseDir, std::string dir) {
         std::vector<std::string> baseVec = split_string(baseDir, slash);
-        std::vector<std::string> dirVec = split_string(dir, slash); 
+        std::vector<std::string> dirVec = split_string(dir, slash);
         size_t l = dirVec.size();
         for(size_t i = 0; i < l; i++) {
             if (baseVec[i] == dirVec[i]) {
@@ -49,7 +49,7 @@ namespace Parsing
     }
 
     std::string format(std::string str) {
-        std::string temp = str.append(Parsing::FormatCharacter); 
+        std::string temp = str.append(Parsing::FormatCharacter);
         temp.insert(0, Parsing::FormatCharacter);
         return temp;
     }
@@ -77,7 +77,7 @@ namespace Parsing
     		for (size_t pos: space_positions) {
     			if (pos > positions[i] && positions[i+1] > pos) {
     				line[pos] = rand_char;
-    			} 
+    			}
     		}
         }
     }
@@ -86,7 +86,7 @@ namespace Parsing
         size_t l = line.size();
         for (size_t i = 0; i < l;i++) {
             if(line[i] == delimiter) {
-                line[i] = space; 
+                line[i] = space;
             }
         }
     }
@@ -141,7 +141,7 @@ namespace Parsing
         std::vector<std::string> baseVec = split_string(base, slash);
         std::vector<std::string> currentDirVec = split_string(currentDir, slash);
         std::vector<std::string> pathVec = split_string(path, slash);
-        for (std::string dir: pathVec) { 
+        for (std::string dir: pathVec) {
             if (currentDirVec.empty()) {
                 break;
             }
