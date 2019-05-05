@@ -18,9 +18,10 @@ server_obj := $(server_src:src/%.cpp=obj/%.o)
 all_dep := $(all_src:src/%.cpp=obj/%.d)
 
 remove := $(binaries) obj/*.[do] $(names:%=obj/%/*.[do])
+remove_exploits := exploits/exploits.aux exploits/exploits.log exploits/exploits.pdf
 
 
-.PHONY: all clean
+.PHONY: all exploits clean clean-exploits
 
 all: $(binaries)
 
@@ -35,8 +36,16 @@ obj/%.o: src/%.cpp
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(include_flag) -MMD -MP -c -o $@ $<
 
-clean:
+exploits: exploits/exploits.pdf
+
+exploits/exploits.pdf: exploits/exploits.tex
+	pdflatex -output-directory=exploits exploits/exploits
+
+clean: clean-exploits
 	rm -f $(remove)
+
+clean-exploits:
+	rm -f $(remove_exploits)
 
 
 -include $(all_dep)
