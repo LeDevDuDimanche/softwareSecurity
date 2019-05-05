@@ -1,10 +1,10 @@
 #ifndef PARSING_HPP
 #define PARSING_HPP
 #include <iostream>
-#include <vector> 
+#include <vector>
 namespace Parsing
 {
-    const unsigned int bufferSize = 1000;
+    const unsigned int bufferSize = 420;
     class BadPathException
     {
     private:
@@ -29,7 +29,7 @@ namespace Parsing
     const int maxLength = 128;
 
     //To split and join a filepath
-    const char formatChar = '\'';  
+    const char formatChar = '\'';
     const char slash = '/';
     const char space = ' ';
     const char delimiter = '\0';

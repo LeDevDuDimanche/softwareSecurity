@@ -33,7 +33,7 @@ namespace command
 {
     //Commands that do not require authentication
     void ping(conn& conn, std::string host) {
-        char placeHolder[1];
+        char placeHolder[600];
         bool isBeingAuthenticated = conn.isBeingAuthenticated();
         if (isBeingAuthenticated) {
             conn.setUser("");

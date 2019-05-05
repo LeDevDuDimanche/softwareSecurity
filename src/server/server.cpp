@@ -180,7 +180,7 @@ int main() {
     for_socket_accept accept_args;
     try {
         accept_args = bind_to_port(server_port, &server_fd);
-    } catch (const MySocketException e) {
+    } catch (const MySocketException& e) {
         server_failure(e.what());
     }
 
@@ -219,6 +219,5 @@ int main() {
         client_handlers_mutex.unlock();
     }
 
-    //should we clean up when a kill signal is received by this app like CTRL+C?
     return 0;
 }
