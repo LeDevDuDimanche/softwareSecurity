@@ -16,6 +16,8 @@ namespace sockets {
     void receive_all(const int sock, std::ostream *outputBuffer); 
     void receive_all(const int sock, int timeout, int waitBetween, std::ostream *outputBuffer); 
 
+    void receive_N(const int sock, std::ostream *outputBuffer, unsigned int n);
+
     class SocketError: public virtual std::runtime_error { 
         using std::runtime_error::runtime_error;
     };

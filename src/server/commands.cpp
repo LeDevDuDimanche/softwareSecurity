@@ -248,10 +248,66 @@ namespace command
         std::string *filename;
     };
 
+    struct put_handler_args {
+        conn *c;
+        std::string *filename;
+        unsigned int filesize;
+    };
 
+    void *put_handler(void *uncast_params) {
+        put_handler_args* handler_params = (put_handler_args *) uncast_params;
+        conn *c = handler_params->c;
+        #define GET_HANDLER_EXIT \
+            delete handler_params->filename; \
+            delete handler_params; \
+            return NULL;
+        long port = MIN_FREE_PORT; //arbitrary
+        for_socket_accept accept_args;
+        int server_fd;
+
+        for (; port < MAX_FREE_PORT; port++) {
+            unavailable_ports_mutex.lock();
+            bool already_used = unavailable_ports.find(port) != unavailable_ports.end();
+            unavailable_ports_mutex.unlock();
+            if (already_used) {
+                continue;
+            }
+            try {
+                accept_args = bind_to_port(port, &server_fd);
+            } catch (const MySocketException e) {
+                c->send_error("unable to create a socket for the get command");
+                std::cerr << e.what() << std::endl;
+                GET_HANDLER_EXIT 
+            }
+            break;
+        }
+
+        std::string to_send = PORT_NUMBER_GET_KEYWORD;
+        std::stringstream strm;
+
+
+
+        strm << PORT_NUMBER_GET_KEYWORD << " " << port;  
+        c->send_message(strm.str());
+        long put_socket = -1; 
+        if ((put_socket = accept(server_fd, accept_args.address,
+                        accept_args.addrlen_ptr)) < 0)
+        { 
+
+            std::cerr << "cannot accept connection socket for get with port " << port << " Errno = " << errno << std::flush;
+            c->send_error("cannot open a socket for you to receive the file sorry"); 
+            GET_HANDLER_EXIT
+        }
+
+        //TODO: Read from the socket.
+
+        std::ofstream *out_file = new std::ofstream(*(handler_params -> filename));
+
+        sockets::receive_N(put_socket, out_file, handler_params->filesize);
+
+    }
     // doing most of the work to process the get command inside the thread
     void *get_handler(void *uncast_params) {
-        std::cout << "are we here?\n"<<std::flush;
         get_handler_args* handler_params = (get_handler_args *) uncast_params;
         /*
         there could be many threads executing get_handler at the same time.
@@ -440,19 +496,33 @@ namespace command
     }
 
 
-    void put(conn& conn, std::string filename, unsigned int fileSize) {
-        std::string filePath = conn.getCurrentDir(filename);
+    void put(conn *c, std::string filename, unsigned int fileSize) {
+        long ret_create;
+        pthread_t put_thread;
+        std::string filePath = c->getCurrentDir(filename);
         bool alreadyExists = pathvalidate::exists(filePath);
         if (alreadyExists) {
-            conn.send_error(Parsing::entryExists);
+            c->send_error(Parsing::entryExists);
             return;
         }
-        bool isBeingDeleted = conn.isBeingDeleted(filePath);
+        bool isBeingDeleted = c->isBeingDeleted(filePath);
         if (isBeingDeleted) {
-            conn.send_error(Parsing::entryDoesNotExist);
+            c->send_error(Parsing::entryDoesNotExist);
             return;
         }
-
+        std::string *copied_filename = new std::string();
+        copied_filename->append(filePath);
+        put_handler_args* args = new put_handler_args {
+            c,
+            copied_filename,
+            fileSize,
+        };
+        if ((ret_create = pthread_create(&put_thread, NULL /*default attributes*/,
+                    put_handler, (void *) args))) {
+            copy_get_args_mutex.lock();
+            copying_get_args--;
+            copy_get_args_mutex.unlock();
+        }
     }
 
     //Misc commands
