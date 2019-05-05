@@ -243,7 +243,7 @@ namespace command
     }
     struct get_handler_args {
         conn *c;
-        std::string *filename; 
+        std::string *filename;
     };
 
 
@@ -255,21 +255,21 @@ namespace command
         there could be many threads executing get_handler at the same time.
         those multiple threads each must at first copy the connection object.
         when they are done copying the connection thread they must signal the main thread
-        that they are done. When no thread is copying the main thread is free to go continue 
+        that they are done. When no thread is copying the main thread is free to go continue
         doing what is was doing earlier.
         unlock mutex when done copying handler args like the filename and the connection object
         */
         copy_get_args_mutex.lock();
         copying_get_args --;
         copy_get_args_mutex.unlock();
-        conn *c = handler_params->c;  
- 
+        conn *c = handler_params->c;
+
         #define GET_HANDLER_EXIT \
             delete handler_params->filename; \
             delete handler_params; \
             pthread_exit(NULL); \
             return NULL;
-        
+
         bool isLoggedIn = c->isLoggedIn();
         std::cout << "is logged in " << isLoggedIn <<  "\n" << std::flush;
         std::cout << "filename " << *(handler_params->filename) << "\n" << std::flush;
@@ -301,26 +301,26 @@ namespace command
                 accept_args = bind_to_port(port, &server_fd);
             } catch (const MySocketException e) {
                 c->send_error("unable to create a socket for the get command");
-                std::cerr << e.what() << std::endl; 
+                std::cerr << e.what() << std::endl;
                 GET_HANDLER_EXIT
             }
             break;
-        } 
+        }
 
 
-        long get_socket = -1; 
+        long get_socket = -1;
         std::cout << "waiting for a connection on the newly created socket for get_handler" << std::flush;
 
-        //need to find a good port from a list of available ports. 
-        std::string to_send = PORT_NUMBER_GET_KEYWORD;  
+        //need to find a good port from a list of available ports.
+        std::string to_send = PORT_NUMBER_GET_KEYWORD;
         std::stringstream strm;
-        strm << PORT_NUMBER_GET_KEYWORD << " " << port; 
-        c->send_message(strm.str()); 
+        strm << PORT_NUMBER_GET_KEYWORD << " " << port;
+        c->send_message(strm.str());
 
         //we accept only one socket connection
         if ((get_socket = accept(server_fd, accept_args.address,
                         accept_args.addrlen_ptr)) < 0)
-        { 
+        {
             std::cerr << "cannot accept connection socket for get with port" << port << std::endl;
             c->send_error("cannot open a socket for you to receive the file sorry");
             close(server_fd);
@@ -329,23 +329,23 @@ namespace command
 
         std::ifstream infile;
         infile.open(*(handler_params->filename));
-        std::string line;   
+        std::string line;
 
         // https://stackoverflow.com/questions/25625115/cpp-byte-file-reading
 
-        std::vector<unsigned char> infile_buffer(GET_BUFFER_SIZE, 0); 
+        std::vector<unsigned char> infile_buffer(GET_BUFFER_SIZE, 0);
         infile.seekg (0, infile.end);
-        int file_length = infile.tellg(); 
+        int file_length = infile.tellg();
         infile.seekg (0, infile.beg);
         int total_left_to_read = file_length;
         //TODO send information about file length to the client.
-        std::streamsize chars_read; 
+        std::streamsize chars_read;
         do {
             std::cout << "Entered the while loop\n" << std::flush;
-            
+
             int to_read = std::min(total_left_to_read , GET_BUFFER_SIZE);
             std::cout << " to read " << to_read << std::flush;
-            infile.read((char*)&infile_buffer[0], to_read); 
+            infile.read((char*)&infile_buffer[0], to_read);
             total_left_to_read -= to_read;
 
             std::cout << "before read state" << std::flush;
@@ -359,10 +359,10 @@ namespace command
                 break;
             }
             std::cout << "before copy" << std::flush;
- 
-              
-            
-            send(get_socket, &infile_buffer[0], infile.gcount(), 0);  
+
+
+
+            send(get_socket, &infile_buffer[0], infile.gcount(), 0);
 
         } while (true);
         std::cout << "outside the loop";
@@ -374,7 +374,7 @@ namespace command
 
         /*
         TODO
-        free port 
+        free port
         remove port from recorded used ports
         + do that every time you have an error after you already assigned a port
         */
@@ -387,7 +387,7 @@ namespace command
         // then check if a file with the name filename exists
         // if it is a directory or doesnt exist throw an error
         // if it exists send a message to the client with the port number he has to connect to to receive the file
-        //   
+        //
         long ret_create;
         pthread_t get_thread;
 
@@ -396,35 +396,35 @@ namespace command
         get_handler_args* args = new get_handler_args {
             c,
             copied_filename
-        }; 
+        };
 
         copy_get_args_mutex.lock();
         copying_get_args++;
         copy_get_args_mutex.unlock();
         std::cout << "Is logged in outside thread" << c->isLoggedIn();
- 
+
 
         if ((ret_create = pthread_create(&get_thread, NULL /*default attributes*/,
-                    get_handler, (void *) args))) { 
+                    get_handler, (void *) args))) {
             copy_get_args_mutex.lock();
             copying_get_args--;
             copy_get_args_mutex.unlock();
-        }  
+        }
 
         copy_get_args_mutex.lock();
         std::cout << "waiting for copying get args to be 0, current value = "<<copying_get_args << std::flush;
         while (copying_get_args != 0) {
             copy_get_args_mutex.unlock();
-            sleep(0.1); 
+            sleep(0.1);
             copy_get_args_mutex.lock();
         }
         copy_get_args_mutex.unlock();
-        //wait until copying_get_args reaches 0    
-        
+        //wait until copying_get_args reaches 0
+
 
     }
 
-    
+
     void put(conn& conn, std::string filename, unsigned int fileSize) {
         std::string filePath = conn.getCurrentDir(filename);
         bool alreadyExists = pathvalidate::exists(filePath);
@@ -437,7 +437,7 @@ namespace command
             conn.send_error(Parsing::entryDoesNotExist);
             return;
         }
-        
+
     }
 
     //Misc commands
@@ -470,9 +470,9 @@ namespace command
         std::string resolved = Parsing::resolve_path(base, currentDir, "");
         std::vector<std::string> files = FileFetching::fetch_all_files_from_dir(resolved);
         std::vector<std::string> candidateFiles;
-        std::string formattedPattern = Parsing::format(pattern);
+        std::string formattedPattern = Parsing::format(Parsing::cleanDir(pattern));
         for (std::string file: files) {
-            std::string formatFile = Parsing::format(file);
+            std::string formatFile = Parsing::format(Parsing::cleanDir(file));
             bool match = SystemCommands::grep(formatFile, formattedPattern);
             if (match) {
                 candidateFiles.push_back(file);
