@@ -231,7 +231,7 @@ namespace command
                 return;
             }
             conn.addFileAsDeleted(resolved);
-            resolved = Parsing::format(Parsing::cleanDir(resolved));
+            resolved = Parsing::format(resolved);
             SystemCommands::rm(CommandConstants::rm, resolved);
             conn.send_message();
         }
