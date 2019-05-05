@@ -155,10 +155,8 @@ namespace Parsing
             currentDirVec.push_back(dir);
         }
         std::string newCurrentDir = join_vector(currentDirVec, join_path);
-        std::cout << "New current dir: " << newCurrentDir << std::endl;
         size_t found = newCurrentDir.find(base);
         if (found != 0) {
-            std::cout << "Error thrown " << std::endl;
             BadPathException e{badPath};
             throw e;
         }

@@ -32,7 +32,7 @@ namespace command
 {
     //Commands that do not require authentication
     void ping(conn& conn, std::string host) {
-        char placeHolder[600];
+        char placeHolder[1];
         bool isBeingAuthenticated = conn.isBeingAuthenticated();
         if (isBeingAuthenticated) {
             conn.setUser("");
@@ -42,7 +42,7 @@ namespace command
             host = Parsing::cleanDir(host);
             std::string pingRetValue = SystemCommands::ping(Parsing::format(host));
             if (pingRetValue.empty()) {
-                sprintf(placeHolder, "ping: %s: Name or service not known", host.c_str());
+                sprintf(placeHolder, "ping: %s: Name or service not known", (host+"\0").c_str());
                 std::string ret{placeHolder};
                 conn.send_message(ret);
             }
