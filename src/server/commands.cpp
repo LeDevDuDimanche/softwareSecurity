@@ -268,11 +268,11 @@ namespace command
 
         #define GET_HANDLER_EXIT \
             delete handler_params->filename; \
-            delete handler_params; \ 
+            delete handler_params; \
             return NULL;
-        
-        bool isLoggedIn = c->isLoggedIn(); 
-        
+
+        bool isLoggedIn = c->isLoggedIn();
+
         if (!isLoggedIn) {
             c->send_error(AuthenticationMessages::mustBeLoggedIn);
             GET_HANDLER_EXIT
@@ -299,7 +299,7 @@ namespace command
             }
             try {
                 accept_args = bind_to_port(port, &server_fd);
-            } catch (const MySocketException e) {
+            } catch (const MySocketException& e) {
                 c->send_error("unable to create a socket for the get command");
                 std::cerr << e.what() << std::endl;
                 GET_HANDLER_EXIT
@@ -315,28 +315,28 @@ namespace command
 
         std::ifstream infile;
         infile.open(file_location);
-        std::string line;   
+        std::string line;
 
-        std::vector<unsigned char> infile_buffer(GET_BUFFER_SIZE, 0); 
+        std::vector<unsigned char> infile_buffer(GET_BUFFER_SIZE, 0);
         infile.seekg (0, infile.end);
-        int file_length = infile.tellg(); 
+        int file_length = infile.tellg();
         infile.seekg (0, infile.beg);
 
 
-        strm << PORT_NUMBER_GET_KEYWORD << " " << port << " " << GET_SIZE_KEYWORD << file_length;  
-        c->send_message(strm.str()); 
+        strm << PORT_NUMBER_GET_KEYWORD << " " << port << " " << GET_SIZE_KEYWORD << file_length;
+        c->send_message(strm.str());
 
-        long get_socket = -1; 
-        std::cout << "waiting for a connection on the newly created socket for get_handler " << 
-            accept_args.address << " port " << accept_args.address 
+        long get_socket = -1;
+        std::cout << "waiting for a connection on the newly created socket for get_handler " <<
+            accept_args.address << " port " << accept_args.address
             << " address len "<< *accept_args.addrlen_ptr<<  std::flush;
         //we accept only one socket connection
         if ((get_socket = accept(server_fd, accept_args.address,
                         accept_args.addrlen_ptr)) < 0)
-        { 
+        {
 
             std::cerr << "cannot accept connection socket for get with port " << port << " Errno = " << errno << std::flush;
-            c->send_error("cannot open a socket for you to receive the file sorry"); 
+            c->send_error("cannot open a socket for you to receive the file sorry");
             GET_HANDLER_EXIT
         }
 

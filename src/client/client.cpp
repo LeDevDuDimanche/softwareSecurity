@@ -20,34 +20,11 @@
 #include <sockets.hpp>
 #include <regex>
 
-
-
 static bool watching_for_port_number = false;
+static bool watching_for_port_number_put = false;
 
 #define SPACES "[ \t]*"
 
-/*
- * Send a file to the server as its own thread
- *
- * fp: file descriptor of file to send
- * d_port: destination port
- */
-void send_file(int fp, int d_port) {
-    // TODO
-    fp += d_port; // just to get rid of warnings
-}
-
-/*
- * Recv a file from the server as its own thread
- *
- * fp: file descriptor of file to save to.
- * d_port: destination port
- * size: the size (in bytes) of the file to recv
- */
-void recv_file(int fp, int d_port, int size) {
-    // TODO
-    fp += d_port * size; // just to get rid of warnings
-}
 
 void print_usage(int argc, const char* argv[]) {
     std::string program_name = "client";
@@ -62,9 +39,6 @@ struct printer_handler_params {
     int sockfd;
     std::ostream *output_stream_ptr;
 };
- 
-
-
 
 
 int create_socket(const char *server_ip, const char *server_port, long *ret_sock, bool nonblocking) {
@@ -108,7 +82,7 @@ int create_socket(const char *server_ip, const char *server_port, long *ret_sock
 }
 
 int create_socket(const char *server_ip, const char *server_port, long *ret_sock) {
-    create_socket(server_ip, server_port, ret_sock, true);
+    return create_socket(server_ip, server_port, ret_sock, true);
 }
 
 
@@ -119,20 +93,20 @@ struct get_handler_args {
     std::string* filename_ptr;
 };
 
-void *get_handler(void *handler_args) { 
+void *get_handler(void *handler_args) {
     std::flush(std::cout);
-    get_handler_args *args = (get_handler_args *) handler_args; 
+    get_handler_args *args = (get_handler_args *) handler_args;
     #define GET_HANDLER_DEFAULT_EXIT \
         delete args->server_port; \
         delete args -> filesize_ptr; \
         delete args -> filename_ptr; \
         return NULL;
-    
+
     long ret_socket;
     if (create_socket(args->server_ip, args->server_port->c_str(), &ret_socket, false) == EXIT_FAILURE) {
-        std::cerr << "could not create socket in get handler of the client" << std::flush;
+        std::cerr << "could not create socket in get handler of the client\n";
         GET_HANDLER_DEFAULT_EXIT
-    } 
+    }
 
     std::ofstream *out_file = new std::ofstream(*(args -> filename_ptr));
 
@@ -144,15 +118,45 @@ void *get_handler(void *handler_args) {
     GET_HANDLER_DEFAULT_EXIT
 }
 
+struct put_handler_args {
+    const char *server_ip;
+    const std::string *server_port;
+    const long *filesize_ptr;
+    std::string* filename_ptr;
+};
+
+void *put_handler(void *handler_args) {
+    put_handler_args* args = (put_handler_args*) handler_args;
+    #define PUT_HANDLER_DEFAULT_EXIT \
+        delete args->server_port; \
+        delete args -> filesize_ptr; \
+        delete args -> filename_ptr; \
+        return NULL;
+
+    long ret_socket;
+    if (create_socket(args->server_ip, args->server_port->c_str(), &ret_socket) == EXIT_FAILURE) {
+        std::cerr << "could not create socket in put handler of the client\n";
+        PUT_HANDLER_DEFAULT_EXIT
+    }
+
+    std::ifstream *in_file = new std::ifstream(*(args -> filename_ptr));
+
+    std::stringstream sstr;
+    sstr << in_file->rdbuf();
+    sockets::send_all(sstr.str(), ret_socket);
+
+    close(ret_socket);
+    PUT_HANDLER_DEFAULT_EXIT
+}
+
 int main(int argc, const char* argv[]) {
     if (argc != 3 && argc != 5) {
         print_usage(argc, argv);
         return EXIT_FAILURE;
     }
 
-
     const char *server_ip = argv[1];
-    const char *server_port = argv[2]; 
+    const char *server_port = argv[2];
     long sock;
 
     if (create_socket(server_ip, server_port, &sock) == EXIT_FAILURE) {
@@ -160,10 +164,8 @@ int main(int argc, const char* argv[]) {
     }
 
 
-
-
     //TODO close socket connection on every error (EXIT FAILURE). Have to do it on server_fault in server source code too.
-    // delete the printer thread too in case of error. 
+    // delete the printer thread too in case of error.
     std::istream* in;
     std::ostream* out;
     std::ifstream in_file;
@@ -189,10 +191,11 @@ int main(int argc, const char* argv[]) {
 
     #define NUMBER_PATTERN "(\\d+)"
     std::regex PORT_NUMBER_GET_REGEX (SPACES PORT_NUMBER_GET_KEYWORD SPACES NUMBER_PATTERN SPACES GET_SIZE_KEYWORD NUMBER_PATTERN SPACES);
+    std::regex PORT_NUMBER_PUT_REGEX (SPACES PORT_NUMBER_PUT_KEYWORD SPACES NUMBER_PATTERN SPACES);
     std::string command;
     std::string response;
     std::string *get_file_name = NULL;
- 
+
     std::ostringstream *output_buffer = new std::ostringstream();
     while (std::getline(*in, command)) {
         output_buffer->clear();
@@ -212,14 +215,24 @@ int main(int argc, const char* argv[]) {
             return EXIT_FAILURE;
         }
 
-        if (command_name == "get") {
+        if (command_name == "get" && parts.size() == 2) {
             watching_for_port_number = true;
             get_file_name = new std::string();
             (*get_file_name).append(parts[1]);
         }
 
-        if (command_name == "put") {
-            // TODO
+        long len;
+        if (command_name == "put" && parts.size() == 3) {
+            get_file_name = new std::string();
+            (*get_file_name).append(parts[1]);
+
+            char* end;
+            len = std::strtol(parts[2].c_str(), &end, 10);
+            if (errno != 0 || *end != '\0' || len <= 0 || len >= 0x10000) {
+                std::cerr << "Invalid len " << '"' << len << '"' << "\n";
+            } else {
+                watching_for_port_number_put = true;
+            }
         }
 
         try {
@@ -227,25 +240,25 @@ int main(int argc, const char* argv[]) {
         } catch (sockets::SocketError& e) {
             std::cerr << "Couldn't receive server response\n";
             return EXIT_FAILURE;
-        }  
-        
+        }
+
         response = output_buffer->str();
         *out << response << std::flush;
-         
+
         if (watching_for_port_number) {
             std::smatch port_matches;
             if (std::regex_search(response, port_matches, PORT_NUMBER_GET_REGEX)) {
                 std::string *get_port_number = new std::string();
-                (*get_port_number).append(port_matches.str(1)); 
+                (*get_port_number).append(port_matches.str(1));
 
                 long *filesize_ptr = new long(std::stol(port_matches.str(2)));
-                watching_for_port_number = false; 
- 
+                watching_for_port_number = false;
+
                 pthread_t get_thread;
                 long ret_create;
 
                 get_handler_args *args = new get_handler_args {
-                    server_ip, 
+                    server_ip,
                     get_port_number,
                     filesize_ptr,
                     get_file_name
@@ -257,7 +270,34 @@ int main(int argc, const char* argv[]) {
                     delete filesize_ptr;
                     delete get_port_number;
                     return EXIT_FAILURE;
-                }   
+                }
+            }
+        }
+
+        if (watching_for_port_number_put) {
+            std::smatch port_matches;
+            if (std::regex_search(response, port_matches, PORT_NUMBER_PUT_REGEX)) {
+                std::string *port_number = new std::string();
+                (*port_number).append(port_matches.str(1));
+
+                watching_for_port_number_put = false;
+
+                pthread_t put_thread;
+                long ret_create;
+
+                get_handler_args *args = new get_handler_args {
+                    server_ip,
+                    port_number,
+                    &len,
+                    get_file_name
+                };
+                //TODO delete filesize in the get_handler
+                if ((ret_create = pthread_create(&put_thread, NULL /*default attributes*/,
+                            put_handler, (void *) args))) {
+                    std::cerr << "cannot create thread for put command response handler\n";
+                    delete port_number;
+                    return EXIT_FAILURE;
+                }
             }
         }
 

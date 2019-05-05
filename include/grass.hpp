@@ -12,6 +12,7 @@
 // #include <stdbool.h>
 
 #define PORT_NUMBER_GET_KEYWORD "get port: "
+#define PORT_NUMBER_PUT_KEYWORD "put port: "
 #define GET_SIZE_KEYWORD "size: "
 
 #include <stdlib.h>
