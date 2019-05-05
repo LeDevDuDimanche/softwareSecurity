@@ -384,10 +384,7 @@ namespace command
         strm << PORT_NUMBER_GET_KEYWORD << " " << port << " " << GET_SIZE_KEYWORD << file_length;  
         c->send_message(strm.str()); 
 
-        long get_socket = -1; 
-        std::cout << "waiting for a connection on the newly created socket for get_handler " << 
-            accept_args.address << " port " << accept_args.address 
-            << " address len "<< *accept_args.addrlen_ptr<<  std::flush;
+        long get_socket = -1;  
         //we accept only one socket connection
         if ((get_socket = accept(server_fd, accept_args.address,
                         accept_args.addrlen_ptr)) < 0)
@@ -406,25 +403,20 @@ namespace command
         int total_left_to_read = file_length;
         //TODO send information about file length to the client.
         std::streamsize chars_read;
-        do {
-            std::cout << "Entered the while loop\n" << std::flush;
+        do { 
 
-            int to_read = std::min(total_left_to_read , GET_BUFFER_SIZE);
-            std::cout << " to read " << to_read << std::flush;
+            int to_read = std::min(total_left_to_read , GET_BUFFER_SIZE); 
             infile.read((char*)&infile_buffer[0], to_read);
             total_left_to_read -= to_read;
-
-            std::cout << "before read state" << std::flush;
+ 
             std::ios_base::iostate state = infile.rdstate();
             if (state == std::ios_base::badbit) {
                 c->send_error("Error while reading file");
                 break;
-            }
-            std::cout << "before gcount" << std::flush;
+            } 
             if (infile.gcount() == 0 || state == std::ios_base::eofbit) {
                 break;
-            }
-            std::cout << "before copy" << std::flush;
+            } 
 
 
 
@@ -433,8 +425,7 @@ namespace command
         } while (true);
         char EOT[] = {sockets::end_of_transmission};
         send(get_socket, EOT, 1, 0);
-
-        std::cout << "outside the loop";
+ 
 
 
         unavailable_ports_mutex.lock();
@@ -473,8 +464,7 @@ namespace command
 
         copy_get_args_mutex.lock();
         copying_get_args++;
-        copy_get_args_mutex.unlock();
-        std::cout << "Is logged in outside thread" << c->isLoggedIn();
+        copy_get_args_mutex.unlock(); 
 
 
         if ((ret_create = pthread_create(&get_thread, NULL /*default attributes*/,
@@ -484,8 +474,7 @@ namespace command
             copy_get_args_mutex.unlock();
         }
 
-        copy_get_args_mutex.lock();
-        std::cout << "waiting for copying get args to be 0, current value = "<<copying_get_args << std::flush;
+        copy_get_args_mutex.lock(); 
         while (copying_get_args > 0) {
             copy_get_args_mutex.unlock();
             sleep(0.1);
