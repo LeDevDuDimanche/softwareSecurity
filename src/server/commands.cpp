@@ -272,6 +272,10 @@ namespace command
             if (already_used) {
                 continue;
             }
+
+            unavailable_ports_mutex.lock();
+            unavailable_ports.insert(port);
+            unavailable_ports_mutex.unlock();
             try {
                 accept_args = bind_to_port(port, &server_fd);
             } catch (const MySocketException e) {
@@ -323,9 +327,7 @@ namespace command
         conn *c = handler_params->c;
 
         #define GET_HANDLER_EXIT \
-            delete handler_params->filename; \
-            delete handler_params; \ 
-            return NULL;
+            delete handler_params->filename; delete handler_params; return NULL;
         
         bool isLoggedIn = c->isLoggedIn(); 
         
@@ -436,10 +438,10 @@ namespace command
 
 
         unavailable_ports_mutex.lock();
-        unavailable_ports.erase(unavailable_ports.find(port));
+        unavailable_ports.erase(port);
         unavailable_ports_mutex.unlock();
 
-        close(get_socket);
+        close(server_fd);
         GET_HANDLER_EXIT
 
 
@@ -484,7 +486,7 @@ namespace command
 
         copy_get_args_mutex.lock();
         std::cout << "waiting for copying get args to be 0, current value = "<<copying_get_args << std::flush;
-        while (copying_get_args != 0) {
+        while (copying_get_args > 0) {
             copy_get_args_mutex.unlock();
             sleep(0.1);
             copy_get_args_mutex.lock();

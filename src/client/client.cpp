@@ -139,8 +139,7 @@ void *get_handler(void *handler_args) {
     sockets::receive_all(ret_socket, out_file);
 
     out_file->close();
-
-    close(ret_socket);
+ 
     GET_HANDLER_DEFAULT_EXIT
 }
 
