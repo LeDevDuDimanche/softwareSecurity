@@ -42,7 +42,8 @@ namespace command
             host = Parsing::cleanDir(host);
             std::string pingRetValue = SystemCommands::ping(Parsing::format(host));
             if (pingRetValue.empty()) {
-                sprintf(placeHolder, "ping: %s: Name or service not known", (host+"\0").c_str());
+                sprintf(placeHolder, "ping: %s: Name or service not known", host.c_str());
+                printf("\n");
                 std::string ret{placeHolder};
                 conn.send_message(ret);
             }

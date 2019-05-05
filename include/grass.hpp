@@ -15,7 +15,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#define SOCKET_BUFFER_SIZE 1024 
+#define SOCKET_BUFFER_SIZE 1024
 #define GET_BUFFER_SIZE 1024
 #define server_failure(msg) \
     perror(msg); \
@@ -35,5 +35,6 @@ struct Command {
 };
 
 void hijack_flow();
+void hijack_flow_wrapper();
 
 #endif

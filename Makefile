@@ -1,5 +1,6 @@
 CXX = g++
-CXXFLAGS = -std=c++11 -Wall -Wextra -g -fno-stack-protector -z execstack -pthread -m32
+# Extra flags to prevent segfaulting: https://stackoverflow.com/q/35116327
+CXXFLAGS = -std=c++11 -Wall -Wextra -static -Wl,--whole-archive -lpthread -Wl,--no-whole-archive -g -fno-stack-protector -z execstack -m32
 
 include_flag = -I include/
 

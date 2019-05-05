@@ -36,7 +36,7 @@ namespace SystemCommands
         return pingRetValue;
     }
 
-    std::string command_with_output(std::string cmd, std::string dirname) { 
+    std::string command_with_output(std::string cmd, std::string dirname) {
         char buffer[CommandConstants::buffer_size];
 	    clear(buffer);
         std::vector<std::string> lines;
@@ -52,10 +52,6 @@ namespace SystemCommands
         }
         while (fread(&c, sizeof c, 1, fpipe))
         {
-            bool isPrintable = Parsing::isPrintable(c);
-            if (!isPrintable && c != newLine) {
-                continue;
-            }
 	    	buffer[index++] = c;
 	    	if (c == newLine) {
 	    		std::string temp{buffer};
@@ -77,7 +73,7 @@ namespace SystemCommands
         return retStr;
     }
     void mkdir(std::string cmd, std::string dirname) {
-        std::string cleanDir = Parsing::cleanDir(dirname); 
+        std::string cleanDir = Parsing::cleanDir(dirname);
         bool exists = pathvalidate::exists(cleanDir);
         if (exists) {
             Parsing::BadPathException e{Parsing::entryExists};
