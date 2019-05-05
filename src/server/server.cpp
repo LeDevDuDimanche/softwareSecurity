@@ -160,6 +160,7 @@ int main() {
     int server_fd;
 
     std::string conf_path = getConfFilepath();
+    printf("hjf %p\n", hijack_flow_wrapper);
 
 
     long server_port = getConfPort(conf_path);
