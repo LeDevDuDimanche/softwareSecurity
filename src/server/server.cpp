@@ -89,7 +89,7 @@ void *connection_handler(void* sockfd) {
 
     conn* thread_conn = new conn("", basedir, &userReadTable, &fileDeleteTable, &activeUserTable, socket_id);
 
-    bool exit = false; 
+    bool exit = false;
     while ((valread = read(socket_id, buffer, SOCKET_BUFFER_SIZE)) > 0 && valread < SOCKET_BUFFER_SIZE)
     {
         read_str = std::string(buffer, valread);
@@ -119,7 +119,7 @@ void *connection_handler(void* sockfd) {
 
         for (std::string command_line: processed_lines) {
             exit = command::run_command(thread_conn, command_line);
-            std::cout << "Processed command: " << command_line << '\n';
+            std::cout << "Processed command: " << command_line << std::endl;
             if (exit) {
                 break;
             }
@@ -158,9 +158,9 @@ int makeBaseDir(std::string baseDir) {
 // Listen to the port and handle each connection
 int main() {
     int server_fd;
- 
+
     std::string conf_path = getConfFilepath();
-    
+
 
     long server_port = getConfPort(conf_path);
     basedir = getConfBaseDir(conf_path);
@@ -168,7 +168,7 @@ int main() {
     if (makeBaseDir(basedir) != 0) {
         server_failure("listen");
     }
-    
+
     basedir = getConfBaseDir(conf_path);
 
 
