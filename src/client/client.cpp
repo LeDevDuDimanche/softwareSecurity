@@ -55,7 +55,7 @@ int create_socket(const char *server_ip, const char *server_port, long *ret_sock
     long port = std::strtol(server_port, &end, 10);
 
     if (errno != 0 || *end != '\0' || port <= 0 || port >= 0x10000) {
-        std::cerr << "Invalid port " << '"' << port << '"' << "\n";
+        std::cerr << "Invalid port " << '"' << server_port << '"' << "\n";
         return EXIT_FAILURE;
     }
     server_addr.sin_port = htons(port);
@@ -127,16 +127,11 @@ struct put_handler_args {
 
 void *put_handler(void *handler_args) {
     put_handler_args* args = (put_handler_args*) handler_args;
-    #define PUT_HANDLER_DEFAULT_EXIT \
-        delete args->server_port; \
-        delete args -> filesize_ptr; \
-        delete args -> filename_ptr; \
-        return NULL;
 
     long ret_socket;
     if (create_socket(args->server_ip, args->server_port->c_str(), &ret_socket) == EXIT_FAILURE) {
         std::cerr << "could not create socket in put handler of the client\n";
-        PUT_HANDLER_DEFAULT_EXIT
+        return NULL;
     }
 
     std::ifstream *in_file = new std::ifstream(*(args -> filename_ptr));
@@ -144,9 +139,9 @@ void *put_handler(void *handler_args) {
     std::stringstream sstr;
     sstr << in_file->rdbuf();
     sockets::send_all(sstr.str(), ret_socket);
+    std::cerr << "DEBUG 6\n";
 
-    close(ret_socket);
-    PUT_HANDLER_DEFAULT_EXIT
+    return NULL;
 }
 
 int main(int argc, const char* argv[]) {
@@ -228,8 +223,8 @@ int main(int argc, const char* argv[]) {
 
             char* end;
             len = std::strtol(parts[2].c_str(), &end, 10);
-            if (errno != 0 || *end != '\0' || len <= 0 || len >= 0x10000) {
-                std::cerr << "Invalid len " << '"' << len << '"' << "\n";
+            if (errno != 0 || *end != '\0' || len <= 0 || len >= 123456) {
+                std::cerr << "Invalid len " << '"' << parts[2] << '"' << "\n";
             } else {
                 watching_for_port_number_put = true;
             }

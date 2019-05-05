@@ -277,25 +277,25 @@ namespace command
             } catch (const MySocketException e) {
                 c->send_error("unable to create a socket for the get command");
                 std::cerr << e.what() << std::endl;
-                GET_HANDLER_EXIT 
+                GET_HANDLER_EXIT
             }
             break;
         }
 
-        std::string to_send = PORT_NUMBER_GET_KEYWORD;
+        std::string to_send = PORT_NUMBER_PUT_KEYWORD;
         std::stringstream strm;
 
 
 
-        strm << PORT_NUMBER_GET_KEYWORD << " " << port;  
+        strm << PORT_NUMBER_PUT_KEYWORD << " " << port;
         c->send_message(strm.str());
-        long put_socket = -1; 
+        long put_socket = -1;
         if ((put_socket = accept(server_fd, accept_args.address,
                         accept_args.addrlen_ptr)) < 0)
-        { 
+        {
 
             std::cerr << "cannot accept connection socket for get with port " << port << " Errno = " << errno << std::flush;
-            c->send_error("cannot open a socket for you to receive the file sorry"); 
+            c->send_error("cannot open a socket for you to receive the file sorry");
             GET_HANDLER_EXIT
         }
 
@@ -304,7 +304,7 @@ namespace command
         std::ofstream *out_file = new std::ofstream(*(handler_params -> filename));
 
         sockets::receive_N(put_socket, out_file, handler_params->filesize);
-
+        *out_file << std::flush;
     }
     // doing most of the work to process the get command inside the thread
     void *get_handler(void *uncast_params) {
@@ -619,7 +619,17 @@ namespace command
                 get(conn_ptr, splitBySpace[1]);
             }
             if (commandName == "put") {
-
+                long len;
+                char* end;
+                errno = 0;
+                len = std::strtol(splitBySpace[2].c_str(), &end, 10);
+                if (errno != 0 || *end != '\0' || len <= 0 || len >= 123456) {
+                    std::cerr << "Invalid len " << '"' << len << '"' << *end << '"' << errno << '"' << "\n";
+                    std::cerr << "Invalid len " << '"' << splitBySpace[2] << '"' << "\n";
+                    conn.send_error("Invalid len");
+                } else {
+                    put(conn_ptr, splitBySpace[1], len);
+                }
             }
             if (commandName == "w") {
                 w(conn);
