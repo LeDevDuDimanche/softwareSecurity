@@ -17,6 +17,7 @@ blah
 blah
 
 \section{Architecture}
+We used C sockets api in order to make the client and server communicate together. The client first spawns a socket that will try to establish communication with the server. If the server accepts the incoming connection it itself spawns a new thread which will the main communication link with this client.In particular, in the get command the server spawns a new socket that will send the file's bytes to the client. 
 
 For this project we used the classic client/server architecture. The server will listen for incoming connections on a socket and when a client wants to start
 a session on our platform the server will start a new thread that will open up a port and will listen for incoming commands from the client. The commands are then parsed 
