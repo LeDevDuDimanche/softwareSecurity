@@ -66,7 +66,8 @@ struct printer_handler_params {
 
 
 
-int create_socket(const char *server_ip, const char *server_port, long *ret_sock) {
+
+int create_socket(const char *server_ip, const char *server_port, long *ret_sock, bool nonblocking) {
 
     struct sockaddr_in server_addr = {};
     server_addr.sin_family = AF_INET;
@@ -97,7 +98,7 @@ int create_socket(const char *server_ip, const char *server_port, long *ret_sock
         return EXIT_FAILURE;
     }
 
-    if (fcntl(*ret_sock, F_SETFL, O_NONBLOCK) == -1) {
+    if (nonblocking && fcntl(*ret_sock, F_SETFL, O_NONBLOCK) == -1) {
         std::cerr << "Error setting socket non-blocking\n";
         return EXIT_FAILURE;
     }
@@ -105,6 +106,11 @@ int create_socket(const char *server_ip, const char *server_port, long *ret_sock
     return EXIT_SUCCESS;
 
 }
+
+int create_socket(const char *server_ip, const char *server_port, long *ret_sock) {
+    create_socket(server_ip, server_port, ret_sock, true);
+}
+
 
 struct get_handler_args {
     const char *server_ip;
@@ -123,7 +129,7 @@ void *get_handler(void *handler_args) {
         return NULL;
     
     long ret_socket;
-    if (create_socket(args->server_ip, args->server_port->c_str(), &ret_socket) == EXIT_FAILURE) {
+    if (create_socket(args->server_ip, args->server_port->c_str(), &ret_socket, false) == EXIT_FAILURE) {
         std::cerr << "could not create socket in get handler of the client" << std::flush;
         GET_HANDLER_DEFAULT_EXIT
     } 
@@ -134,6 +140,7 @@ void *get_handler(void *handler_args) {
 
     out_file->close();
 
+    close(ret_socket);
     GET_HANDLER_DEFAULT_EXIT
 }
 

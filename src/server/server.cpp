@@ -121,20 +121,20 @@ void *connection_handler(void* sockfd) {
             exit = command::run_command(thread_conn, command_line);
             std::cout << "Processed command: " << command_line << std::endl;
             if (exit) {
+                std::cout << "SHOULD NOT BE HERE";
                 break;
             }
         }
 
         if (exit) {
+            std::cout << "SHOULD NOT BE HERE 2";
             delete thread_conn;
             close(socket_id);
             break;
         }
     }
 
-    std::cout << "Exiting thread\n";
-    pthread_exit(NULL);
-
+    std::cout << "Exiting thread\n"; 
 }
 
 /*

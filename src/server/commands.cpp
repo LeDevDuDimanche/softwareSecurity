@@ -268,8 +268,7 @@ namespace command
 
         #define GET_HANDLER_EXIT \
             delete handler_params->filename; \
-            delete handler_params; \
-            pthread_exit(NULL); \
+            delete handler_params; \ 
             return NULL;
         
         bool isLoggedIn = c->isLoggedIn(); 
@@ -380,9 +379,13 @@ namespace command
         std::cout << "outside the loop";
 
 
+        unavailable_ports_mutex.lock();
+        unavailable_ports.erase(unavailable_ports.find(port));
+        unavailable_ports_mutex.unlock();
 
         close(get_socket);
         GET_HANDLER_EXIT
+
 
         /*
         TODO
