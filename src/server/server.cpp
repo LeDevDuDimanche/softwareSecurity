@@ -23,7 +23,6 @@
 #include <server/ActiveUserTable.hpp>
 #include <server/UserReadTable.hpp>
 
-#define SOCKET_QUEUE_LENGTH 3
 #define forever for(;;)
 
 static std::string basedir;
@@ -35,29 +34,6 @@ static ActiveUserTable activeUserTable;
 static std::mutex client_handlers_mutex;
 static std::vector<pthread_t> client_handlers = {};
 
-
-/*
- * Send a file to the client as its own thread
- *
- * fp: file descriptor of file to send
- * sock: socket that has already been created.
- */
-void send_file(int fp, int sock) {
-    fp += sock;    // supress compiler warnings
-    // TODO
-}
-
-/*
- * Send a file to the server as its own thread
- *
- * fp: file descriptor of file to save to.
- * sock: socket that has already been created.
- * size: the size (in bytes) of the file to recv
- */
-void recv_file(int fp, int sock, int size) {
-    fp += sock * size;    // supress compiler warnings
-    // TODO
-}
 
 // Server side REPL given a socket file descriptor
 void *connection_handler(void* socket_id_void) {
@@ -131,7 +107,8 @@ void *connection_handler(void* socket_id_void) {
         }
     }
 
-    std::cout << "Exiting thread\n"; 
+    std::cout << "Exiting thread\n";
+    return NULL;
 }
 
 /*

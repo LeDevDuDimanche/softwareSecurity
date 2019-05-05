@@ -281,25 +281,25 @@ namespace command
             } catch (const MySocketException e) {
                 c->send_error("unable to create a socket for the get command");
                 std::cerr << e.what() << std::endl;
-                GET_HANDLER_EXIT 
+                GET_HANDLER_EXIT
             }
             break;
         }
 
-        std::string to_send = PORT_NUMBER_GET_KEYWORD;
+        std::string to_send = PORT_NUMBER_PUT_KEYWORD;
         std::stringstream strm;
 
 
 
-        strm << PORT_NUMBER_GET_KEYWORD << " " << port;  
+        strm << PORT_NUMBER_PUT_KEYWORD << " " << port;
         c->send_message(strm.str());
-        long put_socket = -1; 
+        long put_socket = -1;
         if ((put_socket = accept(server_fd, accept_args.address,
                         accept_args.addrlen_ptr)) < 0)
-        { 
+        {
 
             std::cerr << "cannot accept connection socket for get with port " << port << " Errno = " << errno << std::flush;
-            c->send_error("cannot open a socket for you to receive the file sorry"); 
+            c->send_error("cannot open a socket for you to receive the file sorry");
             GET_HANDLER_EXIT
         }
 
@@ -308,7 +308,7 @@ namespace command
         std::ofstream *out_file = new std::ofstream(*(handler_params -> filename));
 
         sockets::receive_N(put_socket, out_file, handler_params->filesize);
-
+        *out_file << std::flush;
     }
     // doing most of the work to process the get command inside the thread
     void *get_handler(void *uncast_params) {
@@ -328,9 +328,8 @@ namespace command
 
         #define GET_HANDLER_EXIT \
             delete handler_params->filename; delete handler_params; return NULL;
-        
-        bool isLoggedIn = c->isLoggedIn(); 
-        
+
+        bool isLoggedIn = c->isLoggedIn();
         if (!isLoggedIn) {
             c->send_error(AuthenticationMessages::mustBeLoggedIn);
             GET_HANDLER_EXIT
@@ -357,7 +356,7 @@ namespace command
             }
             try {
                 accept_args = bind_to_port(port, &server_fd);
-            } catch (const MySocketException e) {
+            } catch (const MySocketException& e) {
                 c->send_error("unable to create a socket for the get command");
                 std::cerr << e.what() << std::endl;
                 GET_HANDLER_EXIT
@@ -373,28 +372,28 @@ namespace command
 
         std::ifstream infile;
         infile.open(file_location);
-        std::string line;   
+        std::string line;
 
-        std::vector<unsigned char> infile_buffer(GET_BUFFER_SIZE, 0); 
+        std::vector<unsigned char> infile_buffer(GET_BUFFER_SIZE, 0);
         infile.seekg (0, infile.end);
-        int file_length = infile.tellg(); 
+        int file_length = infile.tellg();
         infile.seekg (0, infile.beg);
 
 
-        strm << PORT_NUMBER_GET_KEYWORD << " " << port << " " << GET_SIZE_KEYWORD << file_length;  
-        c->send_message(strm.str()); 
+        strm << PORT_NUMBER_GET_KEYWORD << " " << port << " " << GET_SIZE_KEYWORD << file_length;
+        c->send_message(strm.str());
 
-        long get_socket = -1; 
-        std::cout << "waiting for a connection on the newly created socket for get_handler " << 
-            accept_args.address << " port " << accept_args.address 
+        long get_socket = -1;
+        std::cout << "waiting for a connection on the newly created socket for get_handler " <<
+            accept_args.address << " port " << accept_args.address
             << " address len "<< *accept_args.addrlen_ptr<<  std::flush;
         //we accept only one socket connection
         if ((get_socket = accept(server_fd, accept_args.address,
                         accept_args.addrlen_ptr)) < 0)
-        { 
+        {
 
             std::cerr << "cannot accept connection socket for get with port " << port << " Errno = " << errno << std::flush;
-            c->send_error("cannot open a socket for you to receive the file sorry"); 
+            c->send_error("cannot open a socket for you to receive the file sorry");
             GET_HANDLER_EXIT
         }
 
@@ -621,7 +620,17 @@ namespace command
                 get(conn_ptr, splitBySpace[1]);
             }
             if (commandName == "put") {
-
+                long len;
+                char* end;
+                errno = 0;
+                len = std::strtol(splitBySpace[2].c_str(), &end, 10);
+                if (errno != 0 || *end != '\0' || len <= 0 || len >= 123456) {
+                    std::cerr << "Invalid len " << '"' << len << '"' << *end << '"' << errno << '"' << "\n";
+                    std::cerr << "Invalid len " << '"' << splitBySpace[2] << '"' << "\n";
+                    conn.send_error("Invalid len");
+                } else {
+                    put(conn_ptr, splitBySpace[1], len);
+                }
             }
             if (commandName == "w") {
                 w(conn);
