@@ -11,6 +11,56 @@ namespace sockets {
     const int defaultTimeout = 1500;    // ms
     const int defaultWait = 1500;    // ms
 
+    void receive_N(const int sock, std::ostream *outputBuffer, unsigned int n) {
+        char buffer[4096];
+        struct pollfd pollFds[1];
+        pollFds[0].fd = sock;
+        pollFds[0].events = POLLIN;
+ 
+        int wait = defaultTimeout;    // initial value
+        for (;;) {
+            int pollVal = poll(pollFds, 1, wait);
+
+            if (pollVal < 0) {
+                throw SocketError("Couldn't poll socket");
+            }
+
+            if (pollVal == 0) {
+                // Timed out.
+                throw SocketError("Receiving message timed out");
+            }
+
+            if (pollFds[0].revents != POLLIN) {
+                throw SocketError("Couldn't receive from socket");
+            }
+
+            while (true) {
+                int min = sizeof buffer < n ? sizeof buffer : n;
+                int recvVal = recv(sock, buffer, min, 0);
+                if (recvVal < 0) {
+                    if (errno == EWOULDBLOCK) {
+                        break;
+                    }
+                }
+ 
+                if (recvVal == 0) {
+                    throw SocketError("Socket connection closed");
+                } 
+
+                outputBuffer->write(buffer, recvVal);
+                n -= recvVal;
+                if (n == 0) {
+                    break;
+                }
+            }
+            if (n == 0) {
+                break;
+            }
+
+            wait = defaultWait;
+        }
+    }
+
     void send_all(std::string message, int sock) {
         const char* buffer_ptr = message.c_str();
         size_t bytes_left = message.length();
