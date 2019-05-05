@@ -57,7 +57,7 @@ namespace Parsing
 
     std::string CommandNotFoundException::getDesc() {
         char placeholder[600];
-        sprintf(placeholder, "The command %s was not found", commandName.c_str());
+        sprintf(placeholder, "Couldn't find the command %s", commandName.c_str());
         std::string ret{placeholder};
         return ret;
     }
