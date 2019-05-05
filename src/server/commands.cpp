@@ -278,7 +278,7 @@ namespace command
             unavailable_ports_mutex.unlock();
             try {
                 accept_args = bind_to_port(port, &server_fd);
-            } catch (const MySocketException e) {
+            } catch (const MySocketException& e) {
                 c->send_error("unable to create a socket for the get command");
                 std::cerr << e.what() << std::endl;
                 GET_HANDLER_EXIT
@@ -404,7 +404,6 @@ namespace command
 
         int total_left_to_read = file_length;
         //TODO send information about file length to the client.
-        std::streamsize chars_read;
         do {
             std::cout << "Entered the while loop\n" << std::flush;
 

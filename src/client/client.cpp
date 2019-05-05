@@ -110,10 +110,10 @@ void *get_handler(void *handler_args) {
 
     std::ofstream *out_file = new std::ofstream(*(args -> filename_ptr));
 
-    sockets::receive_all(ret_socket, out_file);
+    sockets::receive_N(ret_socket, out_file, *(args->filesize_ptr));
 
     out_file->close();
- 
+
     GET_HANDLER_DEFAULT_EXIT
 }
 
@@ -138,7 +138,6 @@ void *put_handler(void *handler_args) {
     std::stringstream sstr;
     sstr << in_file->rdbuf();
     sockets::send_all(sstr.str(), ret_socket);
-    std::cerr << "DEBUG 6\n";
 
     return NULL;
 }
