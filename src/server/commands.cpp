@@ -539,7 +539,6 @@ namespace command
         //Pass in the empty string since date is not used on a directory
         std::string dateOutput = SystemCommands::command_with_output(cmd, "");
         conn.send_message(dateOutput);
-
     }
     void grep(conn& conn, std::string pattern) {
         bool isLoggedIn = conn.isLoggedIn();
