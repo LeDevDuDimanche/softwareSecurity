@@ -23,7 +23,6 @@
 #include <server/ActiveUserTable.hpp>
 #include <server/UserReadTable.hpp>
 
-#define SOCKET_QUEUE_LENGTH 3
 #define forever for(;;)
 
 static std::string basedir;
@@ -36,34 +35,11 @@ static std::mutex client_handlers_mutex;
 static std::vector<pthread_t> client_handlers = {};
 
 
-/*
- * Send a file to the client as its own thread
- *
- * fp: file descriptor of file to send
- * sock: socket that has already been created.
- */
-void send_file(int fp, int sock) {
-    fp += sock;    // supress compiler warnings
-    // TODO
-}
-
-/*
- * Send a file to the server as its own thread
- *
- * fp: file descriptor of file to save to.
- * sock: socket that has already been created.
- * size: the size (in bytes) of the file to recv
- */
-void recv_file(int fp, int sock, int size) {
-    fp += sock * size;    // supress compiler warnings
-    // TODO
-}
-
 // Server side REPL given a socket file descriptor
-void *connection_handler(void* sockfd) {
+void *connection_handler(void* socket_id_void) {
     char buffer[SOCKET_BUFFER_SIZE] = {0};
     int valread;
-    long socket_id = (long)sockfd; //conversion from int to long because of -fnopermissive compilation flag
+    long socket_id = (long)socket_id_void; //conversion from int to long because of -fnopermissive compilation flag
     pthread_t this_thread = pthread_self();
     printf("new thread id %ld, new socket_id %ld\n", this_thread, socket_id);
 
@@ -120,21 +96,19 @@ void *connection_handler(void* sockfd) {
         for (std::string command_line: processed_lines) {
             exit = command::run_command(thread_conn, command_line);
             std::cout << "Processed command: " << command_line << std::endl;
-            if (exit) {
-                std::cout << "SHOULD NOT BE HERE";
+            if (exit) { 
                 break;
             }
         }
 
-        if (exit) {
-            std::cout << "SHOULD NOT BE HERE 2";
-            delete thread_conn;
-            close(socket_id);
+        if (exit) { 
+            delete thread_conn; 
             break;
         }
     }
 
-    std::cout << "Exiting thread\n"; 
+    std::cout << "Exiting thread\n";
+    return NULL;
 }
 
 /*
@@ -192,7 +166,7 @@ int main() {
         if ((new_socket = accept(server_fd, accept_args.address,
                            accept_args.addrlen_ptr)) < 0)
         {
-            close(new_socket);
+            close(server_fd);
             server_failure("accept");
         }
         printf("handling new connection\n");
@@ -205,12 +179,12 @@ int main() {
             char *err_msg_buffer = (char *)malloc(err_msg_max_len);
             if (err_msg_buffer == NULL)
             {
-                close(new_socket);
+                close(server_fd);
                 server_failure("cannot allocate memory and cannot create a thread");
             }
 
             snprintf(err_msg_buffer, err_msg_max_len, FIRST_PART_ERROR_MSG " %d", ret_create);
-            close(new_socket);
+            close(server_fd);
             server_failure(err_msg_buffer);
         }
 
