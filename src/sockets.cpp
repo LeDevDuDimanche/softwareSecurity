@@ -3,6 +3,7 @@
 #include <string>
 
 #include <poll.h>
+#include <fstream>
 #include <sys/socket.h>
 
 
@@ -23,17 +24,20 @@ namespace sockets {
         }
     }
 
-    std::string receive_all(int sock) {
-        return receive_all(sock, defaultTimeout, defaultWait);
+    void receive_all(const int sock, std::ostream *outputBuffer) {
+        receive_all(sock, defaultTimeout, defaultWait, outputBuffer);
     }
 
-    std::string receive_all(int sock, int timeout, int waitBetween) {
+/*
+ *   I could add an optional value indicating the expected number of bytes to receive.
+ *   I could make it so that it prints to a stream instead
+*/
+    void receive_all(const int sock, int timeout, int waitBetween, std::ostream *outputBuffer) {
         char buffer[4096];
         struct pollfd pollFds[1];
         pollFds[0].fd = sock;
         pollFds[0].events = POLLIN;
-
-        std::string message = "";
+ 
         int wait = timeout;    // initial value
         for (;;) {
             int pollVal = poll(pollFds, 1, wait);
@@ -51,21 +55,24 @@ namespace sockets {
                 throw SocketError("Couldn't receive from socket");
             }
 
-            while (true) {
+            while (true) { 
                 int recvVal = recv(sock, buffer, sizeof buffer, 0);
                 if (recvVal < 0) {
                     if (errno == EWOULDBLOCK) {
                         break;
                     }
                 }
+ 
                 if (recvVal == 0) {
                     throw SocketError("Socket connection closed");
-                }
-                message.append(buffer, recvVal);
-                if (buffer[recvVal - 1] == end_of_transmission) {
-                    message.pop_back();    // Remove end-of-transmission byte
-                    return message;
-                }
+                } 
+
+                outputBuffer->write(buffer, recvVal - 1);
+                if (buffer[recvVal - 1] == end_of_transmission) { 
+                    return;
+                } else {
+                    outputBuffer->write(buffer + recvVal - 1, 1);
+                } 
             }
 
             wait = waitBetween;

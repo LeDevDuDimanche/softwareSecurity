@@ -5,7 +5,7 @@
 #include <string>
 
 #define IP_PROT 0
-#define SOCKET_QUEUE_LENGTH 3
+#define SOCKET_QUEUE_LENGTH 10
 /*
 * contains informations that are parameters for the accept method of the socket library
 */

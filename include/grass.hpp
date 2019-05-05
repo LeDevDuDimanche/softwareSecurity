@@ -11,7 +11,8 @@
 // #include <fcntl.h>
 // #include <stdbool.h>
 
-#define PORT_NUMBER_GET_KEYWORD "PORT_NUMBER_GET"
+#define PORT_NUMBER_GET_KEYWORD "get port: "
+#define GET_SIZE_KEYWORD "size: "
 
 #include <stdlib.h>
 #include <stdio.h>

@@ -12,8 +12,9 @@ namespace sockets {
     void send_all(std::string command, int sock);
 
     // Try to receive the whole message and throw SocketError on error.
-    std::string receive_all(int sock);
-    std::string receive_all(int sock, int timeout, int waitBetween);
+
+    void receive_all(const int sock, std::ostream *outputBuffer); 
+    void receive_all(const int sock, int timeout, int waitBetween, std::ostream *outputBuffer); 
 
     class SocketError: public virtual std::runtime_error { 
         using std::runtime_error::runtime_error;

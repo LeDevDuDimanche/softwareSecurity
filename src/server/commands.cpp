@@ -3,6 +3,7 @@
 #include <ios>
 #include <vector>
 
+#include <sockets.hpp>
 #include <server/commands.hpp>
 #include <server/pathvalidate.hpp>
 #include <server/systemcmd.hpp>
@@ -14,7 +15,7 @@
 #include <grass.hpp>
 #include <server/commandParsing.hpp>
 #include <server/conf.hpp>
-#define MIN_FREE_PORT 4000
+#define MIN_FREE_PORT 5000
 #define MAX_FREE_PORT 65535
 
 #include <socketsUtils.hpp>
@@ -270,10 +271,9 @@ namespace command
             delete handler_params; \
             pthread_exit(NULL); \
             return NULL;
-
-        bool isLoggedIn = c->isLoggedIn();
-        std::cout << "is logged in " << isLoggedIn <<  "\n" << std::flush;
-        std::cout << "filename " << *(handler_params->filename) << "\n" << std::flush;
+        
+        bool isLoggedIn = c->isLoggedIn(); 
+        
         if (!isLoggedIn) {
             c->send_error(AuthenticationMessages::mustBeLoggedIn);
             GET_HANDLER_EXIT
@@ -309,35 +309,43 @@ namespace command
         }
 
 
-        long get_socket = -1;
-        std::cout << "waiting for a connection on the newly created socket for get_handler" << std::flush;
 
         //need to find a good port from a list of available ports.
         std::string to_send = PORT_NUMBER_GET_KEYWORD;
         std::stringstream strm;
-        strm << PORT_NUMBER_GET_KEYWORD << " " << port;
-        c->send_message(strm.str());
 
+        std::ifstream infile;
+        infile.open(file_location);
+        std::string line;   
+
+        std::vector<unsigned char> infile_buffer(GET_BUFFER_SIZE, 0); 
+        infile.seekg (0, infile.end);
+        int file_length = infile.tellg(); 
+        infile.seekg (0, infile.beg);
+
+
+        strm << PORT_NUMBER_GET_KEYWORD << " " << port << " " << GET_SIZE_KEYWORD << file_length;  
+        c->send_message(strm.str()); 
+
+        long get_socket = -1; 
+        std::cout << "waiting for a connection on the newly created socket for get_handler " << 
+            accept_args.address << " port " << accept_args.address 
+            << " address len "<< *accept_args.addrlen_ptr<<  std::flush;
         //we accept only one socket connection
         if ((get_socket = accept(server_fd, accept_args.address,
                         accept_args.addrlen_ptr)) < 0)
-        {
-            std::cerr << "cannot accept connection socket for get with port" << port << std::endl;
-            c->send_error("cannot open a socket for you to receive the file sorry");
-            close(server_fd);
+        { 
+
+            std::cerr << "cannot accept connection socket for get with port " << port << " Errno = " << errno << std::flush;
+            c->send_error("cannot open a socket for you to receive the file sorry"); 
             GET_HANDLER_EXIT
         }
 
-        std::ifstream infile;
-        infile.open(*(handler_params->filename));
-        std::string line;
+
 
         // https://stackoverflow.com/questions/25625115/cpp-byte-file-reading
 
-        std::vector<unsigned char> infile_buffer(GET_BUFFER_SIZE, 0);
-        infile.seekg (0, infile.end);
-        int file_length = infile.tellg();
-        infile.seekg (0, infile.beg);
+
         int total_left_to_read = file_length;
         //TODO send information about file length to the client.
         std::streamsize chars_read;
@@ -366,6 +374,9 @@ namespace command
             send(get_socket, &infile_buffer[0], infile.gcount(), 0);
 
         } while (true);
+        char EOT[] = {sockets::end_of_transmission};
+        send(get_socket, EOT, 1, 0);
+
         std::cout << "outside the loop";
 
 
