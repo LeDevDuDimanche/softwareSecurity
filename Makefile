@@ -18,11 +18,14 @@ client_obj := $(client_src:src/%.cpp=obj/%.o)
 server_obj := $(server_src:src/%.cpp=obj/%.o)
 all_dep := $(all_src:src/%.cpp=obj/%.d)
 
+latex_extensions = aux log pdf
+
 remove := $(binaries) obj/*.[do] $(names:%=obj/%/*.[do])
-remove_exploits := exploits/exploits.aux exploits/exploits.log exploits/exploits.pdf
+remove_exploits := $(latex_extensions:%=exploits/exploits.%)
+remove_docs := $(latex_extensions:%=docs/documentation.%)
 
 
-.PHONY: all exploits clean clean-exploits
+.PHONY: all exploits clean clean-bin clean-exploits clean-docs
 
 all: $(binaries)
 
@@ -42,11 +45,21 @@ exploits: exploits/exploits.pdf
 exploits/exploits.pdf: exploits/exploits.tex
 	pdflatex -output-directory=exploits exploits/exploits
 
-clean: clean-exploits
+docs: docs/documentation.pdf
+
+docs/documentation.pdf: docs/documentation.tex
+	pdflatex -output-directory=docs docs/documentation
+
+clean: clean-bin clean-exploits clean-docs
+
+clean-bin:
 	rm -f $(remove)
 
 clean-exploits:
 	rm -f $(remove_exploits)
+
+clean-docs:
+	rm -f $(remove_docs)
 
 
 -include $(all_dep)

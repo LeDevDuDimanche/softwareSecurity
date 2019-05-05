@@ -303,12 +303,11 @@ namespace command
             GET_HANDLER_EXIT
         }
 
-        //TODO: Read from the socket.
-
         std::ofstream *out_file = new std::ofstream(*(handler_params -> filename));
 
         sockets::receive_N(put_socket, out_file, handler_params->filesize);
         *out_file << std::flush;
+        return NULL;
     }
     // doing most of the work to process the get command inside the thread
     void *get_handler(void *uncast_params) {
@@ -400,7 +399,6 @@ namespace command
 
 
         int total_left_to_read = file_length;
-        //TODO send information about file length to the client.
         do {
 
             int to_read = std::min(total_left_to_read , GET_BUFFER_SIZE);
@@ -433,13 +431,6 @@ namespace command
         close(server_fd);
         GET_HANDLER_EXIT
 
-
-        /*
-        TODO
-        free port
-        remove port from recorded used ports
-        + do that every time you have an error after you already assigned a port
-        */
     }
 
     //File specific commands

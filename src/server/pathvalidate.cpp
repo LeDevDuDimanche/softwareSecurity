@@ -28,7 +28,6 @@ namespace pathvalidate
     bool valid_relative_to_base(std::string base, std::string newPath) {
         base = base;    // supress compiler warnings
         newPath = newPath;    // supress compiler warnings
-        // TODO
         return true;
     }
 

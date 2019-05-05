@@ -96,13 +96,13 @@ void *connection_handler(void* socket_id_void) {
         for (std::string command_line: processed_lines) {
             exit = command::run_command(thread_conn, command_line);
             std::cout << "Processed command: " << command_line << std::endl;
-            if (exit) { 
+            if (exit) {
                 break;
             }
         }
 
-        if (exit) { 
-            delete thread_conn; 
+        if (exit) {
+            delete thread_conn;
             break;
         }
     }
@@ -111,31 +111,16 @@ void *connection_handler(void* socket_id_void) {
     return NULL;
 }
 
-/*
- * search all files in the current directory
- * and its subdirectory for the pattern
- *
- * pattern: an extended regular expressions.
- * Output: A line seperated list of matching files' addresses
- */
-void search(char *pattern) {
-    pattern = pattern;    // supress compiler warnings
-    // TODO
-}
-
 int makeBaseDir(std::string baseDir) {
     return system(("mkdir -p " + baseDir).c_str());
 }
 
-// TODO:
 // Parse the rass.conf file
 // Listen to the port and handle each connection
 int main() {
     int server_fd;
 
     std::string conf_path = getConfFilepath();
-    printf("hjf %p\n", hijack_flow_wrapper);
-
 
     long server_port = getConfPort(conf_path);
     basedir = getConfBaseDir(conf_path);

@@ -51,7 +51,7 @@ PORT = 2405
 
 OUT_FILENAME = 'stdout.txt'
 OUT_FILE_PATH = TEMP_DIR / OUT_FILENAME
-STARTUP_WAIT = 0.025
+STARTUP_WAIT = 0.045
 TIMEOUT = 3.0
 
 STDOUT_SUFFIX = '-stdout'
@@ -331,7 +331,7 @@ def main():
 
     start = time.perf_counter()
 
-    include_file_io = len(sys.argv) > 1 and sys.argv[1] == 'all'
+    include_file_io = len(sys.argv) <= 1 or sys.argv[1] != 'less'
 
     tests = list(get_tests(include_file_io))
     num_passed = 0

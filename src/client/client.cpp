@@ -157,7 +157,6 @@ int main(int argc, const char* argv[]) {
     }
 
 
-    //TODO close socket connection on every error (EXIT FAILURE). Have to do it on server_fault in server source code too.
     // delete the printer thread too in case of error.
     std::istream* in;
     std::ostream* out;
@@ -256,7 +255,6 @@ int main(int argc, const char* argv[]) {
                     filesize_ptr,
                     get_file_name
                 };
-                //TODO delete filesize in the get_handler
                 if ((ret_create = pthread_create(&get_thread, NULL /*default attributes*/,
                             get_handler, (void *) args))) {
                     std::cerr << "cannot create thread for get command response handler\n";
@@ -284,7 +282,6 @@ int main(int argc, const char* argv[]) {
                     &len,
                     get_file_name
                 };
-                //TODO delete filesize in the get_handler
                 if ((ret_create = pthread_create(&put_thread, NULL /*default attributes*/,
                             put_handler, (void *) args))) {
                     std::cerr << "cannot create thread for put command response handler\n";
